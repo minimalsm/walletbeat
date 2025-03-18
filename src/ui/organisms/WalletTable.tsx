@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Box, Tooltip } from '@mui/material'
+import { Box, Tooltip, useTheme, Paper, Typography } from '@mui/material'
 import { useState } from 'react'
 
 // Replace with your actual data source
@@ -137,6 +137,7 @@ export default function WalletTable(): ReactElement {
 	})
 	const tableStateHandle = new TableStateHandle(tableState, setTableState)
 	const [rowsState, setRowsState] = useState<Record<string, WalletRowState>>({})
+	const theme = useTheme()
 
 	// Create wallet rows with proper state handling
 	const walletRows = Object.values(ratedWallets).map(
@@ -183,31 +184,170 @@ export default function WalletTable(): ReactElement {
 	})
 
 	return (
-		<div style={{ padding: '1rem' }}>
-			<table border={1} cellPadding={8} style={{ borderCollapse: 'collapse', width: '100%' }}>
-				<thead>
-					{table.getHeaderGroups().map(headerGroup => (
-						<tr key={headerGroup.id}>
-							{headerGroup.headers.map(header => (
-								<th key={header.id}>
-									{header.isPlaceholder
-										? null
-										: flexRender(header.column.columnDef.header, header.getContext())}
-								</th>
+		<Box sx={{ width: '100%', height: '100%', overflowX: 'auto', px: 2 }}>
+			<Typography
+				variant="h2"
+				sx={{
+					fontSize: '1.5rem',
+					fontWeight: 'bold',
+					mb: 2,
+					pb: 1,
+					borderBottom: '1px solid var(--border, #e0e0e0)',
+					color: 'var(--text-accent, #1976d2)',
+				}}
+			>
+				Wallets
+			</Typography>
+
+			<Paper
+				elevation={theme.palette.mode === 'dark' ? 3 : 1}
+				sx={{
+					width: '100%',
+					maxWidth: '1600px',
+					margin: '0 auto',
+					overflow: 'auto',
+					borderRadius: 1,
+					mb: 6,
+					bgcolor: 'var(--background-primary, #fff)',
+				}}
+			>
+				<Box
+					sx={{
+						overflow: 'auto',
+						'&::-webkit-scrollbar': {
+							height: '8px',
+						},
+						'&::-webkit-scrollbar-thumb': {
+							backgroundColor: 'rgba(0, 0, 0, 0.2)',
+							borderRadius: '4px',
+						},
+					}}
+				>
+					<table
+						style={{
+							width: '100%',
+							minWidth: '1200px',
+							borderCollapse: 'separate',
+							borderSpacing: 0,
+							border: 'none',
+						}}
+					>
+						<thead>
+							{table.getHeaderGroups().map(headerGroup => (
+								<tr key={headerGroup.id}>
+									{headerGroup.headers.map((header, index) => (
+										<Box
+											component="th"
+											key={header.id}
+											sx={{
+												bgcolor: 'var(--background-row-border, #f5f5f5)',
+												color: 'var(--text-primary, #333)',
+												fontSize: '1.05rem',
+												fontWeight: 'bold',
+												textAlign: 'left',
+												height: '64px',
+												padding: '8px 16px',
+												borderBottom: '2px solid var(--border, #e0e0e0)',
+												position: 'sticky',
+												top: 0,
+												zIndex: 2,
+												...(index === 0 && {
+													position: 'sticky',
+													left: 0,
+													zIndex: 3,
+													minWidth: '310px',
+													width: '310px',
+													borderRight: '1px solid var(--border, #e0e0e0)',
+												}),
+												...(index === 1 && {
+													minWidth: '142px',
+													width: '142px',
+												}),
+											}}
+										>
+											<Box
+												sx={{
+													display: 'flex',
+													alignItems: 'center',
+													justifyContent: 'flex-start',
+													height: '100%',
+												}}
+											>
+												{header.isPlaceholder
+													? null
+													: flexRender(header.column.columnDef.header, header.getContext())}
+											</Box>
+										</Box>
+									))}
+								</tr>
 							))}
-						</tr>
-					))}
-				</thead>
-				<tbody>
-					{table.getRowModel().rows.map(row => (
-						<tr key={row.id}>
-							{row.getVisibleCells().map(cell => (
-								<td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-							))}
-						</tr>
-					))}
-				</tbody>
-			</table>
-		</div>
+						</thead>
+						<tbody>
+							{table.getRowModel().rows.map((row, rowIdx) => {
+								const rowData = row.original.row as WalletRow
+								const isExpanded = rowData.expanded
+								const rowHeight = isExpanded ? '220px' : '140px'
+								const customSx = rowData.rowWideStyle
+
+								return (
+									<Box
+										component="tr"
+										key={row.id}
+										sx={{
+											height: rowHeight,
+											bgcolor:
+												rowIdx % 2 === 1
+													? 'var(--background-secondary, #fafafa)'
+													: 'var(--background-primary, #fff)',
+											'&:hover': {
+												bgcolor: 'rgba(25, 118, 210, 0.04)',
+											},
+											transition: 'background-color 0.2s',
+											...customSx,
+										}}
+									>
+										{row.getVisibleCells().map((cell, index) => (
+											<Box
+												component="td"
+												key={cell.id}
+												sx={{
+													padding: '16px',
+													borderBottom: '1px solid var(--border, #e0e0e0)',
+													color: 'var(--text-primary, #333)',
+													fontSize: '1rem',
+													lineHeight: 1.4,
+													verticalAlign: 'middle',
+													...(index === 0 && {
+														position: 'sticky',
+														left: 0,
+														zIndex: 1,
+														bgcolor:
+															rowIdx % 2 === 1
+																? 'var(--background-secondary, #fafafa)'
+																: 'var(--background-primary, #fff)',
+														'tr:hover &': {
+															bgcolor: 'rgba(25, 118, 210, 0.04)',
+														},
+														borderRight: '1px solid var(--border, #e0e0e0)',
+														minWidth: '310px',
+														width: '310px',
+													}),
+													...(index === 1 && {
+														minWidth: '142px',
+														width: '142px',
+													}),
+												}}
+											>
+												{flexRender(cell.column.columnDef.cell, cell.getContext())}
+											</Box>
+										))}
+									</Box>
+								)
+							})}
+						</tbody>
+					</table>
+				</Box>
+			</Paper>
+		</Box>
 	)
 }
