@@ -22,8 +22,8 @@ export const rainbow: Wallet = {
 		contributors: [polymutex],
 		lastUpdated: '2025-02-08',
 		multiWalletType: {
-			categories: [WalletTypeCategory.EOA]
-		}
+			categories: [WalletTypeCategory.EOA],
+		},
 	},
 	features: {
 		profile: WalletProfile.GENERIC,
@@ -62,7 +62,7 @@ export const rainbow: Wallet = {
 			hardwareWalletClearSigning: {
 				clearSigningSupport: {
 					level: ClearSigningLevel.NONE,
-					details: 'No hardware wallet clear signing information available.'
+					details: 'No hardware wallet clear signing information available.',
 				},
 				ref: null,
 			},

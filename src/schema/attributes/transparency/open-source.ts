@@ -190,7 +190,7 @@ export const openSource: Attribute<OpenSourceValue> = {
 		if (features.license === null) {
 			return unrated(openSource, brand, { license: License.UNLICENSED_VISIBLE })
 		}
-		
+
 		// Handle the new LicenseWithValue type
 		let licenseValue: License
 		if (typeof features.license === 'object' && features.license.value !== undefined) {
@@ -198,7 +198,7 @@ export const openSource: Attribute<OpenSourceValue> = {
 		} else {
 			licenseValue = features.license as License
 		}
-		
+
 		if (licenseValue === License.UNLICENSED_VISIBLE) {
 			return unlicensed
 		}

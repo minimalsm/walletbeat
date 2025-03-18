@@ -82,15 +82,15 @@ export const sourceVisibility: Attribute<SourceVisibilityValue> = {
 		if (features.license === null) {
 			return unrated(sourceVisibility, brand, null)
 		}
-		
+
 		// Handle the new LicenseWithValue type
-		let licenseValue;
+		let licenseValue
 		if (typeof features.license === 'object' && 'value' in features.license) {
-			licenseValue = features.license.value;
+			licenseValue = features.license.value
 		} else {
-			licenseValue = features.license;
+			licenseValue = features.license
 		}
-		
+
 		if (licenseSourceIsVisible(licenseValue)) {
 			return sourcePublic
 		}

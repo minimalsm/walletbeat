@@ -56,7 +56,7 @@ export const unratedTemplate: Wallet = {
 			hardwareWalletClearSigning: {
 				clearSigningSupport: {
 					level: ClearSigningLevel.NONE,
-					details: 'No hardware wallet clear signing information available.'
+					details: 'No hardware wallet clear signing information available.',
 				},
 				ref: null,
 			},

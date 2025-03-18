@@ -61,7 +61,8 @@ export const fireflyWallet: Wallet = {
 			hardwareWalletClearSigning: {
 				clearSigningSupport: {
 					level: ClearSigningLevel.NONE,
-					details: 'Firefly currently does not provide clear signing support as it is still in development.'
+					details:
+						'Firefly currently does not provide clear signing support as it is still in development.',
 				},
 				ref: null,
 			},

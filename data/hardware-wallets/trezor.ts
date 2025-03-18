@@ -66,26 +66,30 @@ export const trezorWallet: Wallet = {
 			hardwareWalletClearSigning: {
 				clearSigningSupport: {
 					level: ClearSigningLevel.PARTIAL,
-					details: 'Trezor provides partial clear signing support with most transaction details displayed on the device screen, but some complex transactions may not show all details.'
+					details:
+						'Trezor provides partial clear signing support with most transaction details displayed on the device screen, but some complex transactions may not show all details.',
 				},
 				ref: [
 					{
 						url: 'https://youtu.be/7lP_0h-PPvY?si=07dMNswh_9RsuWQ9&t=879',
-						explanation: 'Independent video demonstration of Trezor\'s clear signing implementation on Safe.',
-					}
+						explanation:
+							"Independent video demonstration of Trezor's clear signing implementation on Safe.",
+					},
 				],
 			},
 			bugBountyProgram: {
 				type: BugBountyProgramType.COMPREHENSIVE,
 				url: 'https://trezor.io/support/a/how-to-report-a-security-issue',
-				details: 'At SatoshiLabs and Trezor, the safety of our products and services is a top priority. If you have identified a security vulnerability, we would greatly appreciate your assistance in disclosing it to us in a responsible manner.',
+				details:
+					'At SatoshiLabs and Trezor, the safety of our products and services is a top priority. If you have identified a security vulnerability, we would greatly appreciate your assistance in disclosing it to us in a responsible manner.',
 				upgradePathAvailable: true,
 				ref: [
 					{
 						url: 'https://trezor.io/support/a/how-to-report-a-security-issue',
-						explanation: 'At SatoshiLabs and Trezor, the safety of our products and services is a top priority. If you have identified a security vulnerability, we would greatly appreciate your assistance in disclosing it to us in a responsible manner.'
-					}
-				]
+						explanation:
+							'At SatoshiLabs and Trezor, the safety of our products and services is a top priority. If you have identified a security vulnerability, we would greatly appreciate your assistance in disclosing it to us in a responsible manner.',
+					},
+				],
 			},
 		},
 		privacy: {

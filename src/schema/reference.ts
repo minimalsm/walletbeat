@@ -185,53 +185,63 @@ export function refs<T>(withRef: WithRef<T>): FullyQualifiedReference[] {
 export function refsWithValue<T>(obj: any): FullyQualifiedReference[] {
 	// Handle null or undefined
 	if (!obj) {
-		return [];
+		return []
 	}
-	
+
 	// Handle primitive values
 	if (typeof obj !== 'object') {
-		return [];
+		return []
 	}
-	
+
 	try {
 		// Handle case where obj has 'value' and 'ref' properties (LicenseWithValue)
 		if ('value' in obj && 'ref' in obj) {
-			return refs(obj);
+			return refs(obj)
 		}
-		
+
 		// Handle case where obj has nested reference properties
-		if ('sendTransactionWarning' in obj || 'contractTransactionWarning' in obj || 'scamUrlWarning' in obj) {
-			const allRefs: FullyQualifiedReference[] = [];
-			
+		if (
+			'sendTransactionWarning' in obj ||
+			'contractTransactionWarning' in obj ||
+			'scamUrlWarning' in obj
+		) {
+			const allRefs: FullyQualifiedReference[] = []
+
 			// Check for each potential ref source
 			const checkAndAddRefs = (source: any) => {
 				if (source && 'ref' in source) {
-					allRefs.push(...refs({ref: source.ref}));
+					allRefs.push(...refs({ ref: source.ref }))
 				}
-			};
-			
+			}
+
 			// Check all possible warning types
-			if ('sendTransactionWarning' in obj) checkAndAddRefs(obj.sendTransactionWarning);
-			if ('contractTransactionWarning' in obj) checkAndAddRefs(obj.contractTransactionWarning);
-			if ('scamUrlWarning' in obj) checkAndAddRefs(obj.scamUrlWarning);
-			
-			return allRefs;
+			if ('sendTransactionWarning' in obj) {
+				checkAndAddRefs(obj.sendTransactionWarning)
+			}
+			if ('contractTransactionWarning' in obj) {
+				checkAndAddRefs(obj.contractTransactionWarning)
+			}
+			if ('scamUrlWarning' in obj) {
+				checkAndAddRefs(obj.scamUrlWarning)
+			}
+
+			return allRefs
 		}
-		
+
 		// Handle normal WithRef objects
 		if ('ref' in obj) {
-			return refs(obj as WithRef<any>);
+			return refs(obj as WithRef<any>)
 		}
-		
+
 		// Handle Arrays of refs
 		if (Array.isArray(obj)) {
-			return obj.flatMap(item => refsWithValue(item));
+			return obj.flatMap(item => refsWithValue(item))
 		}
 	} catch (error) {
-		console.error('Error extracting references:', error);
+		console.error('Error extracting references:', error)
 	}
-	
-	return [];
+
+	return []
 }
 
 /** Extract references out of `withRef` and return an object without them. */

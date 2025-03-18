@@ -87,14 +87,14 @@ export interface WalletMetadata {
 	 * Information about the wallet type (EOA, Smart Wallet, or Hardware Wallet)
 	 */
 	walletType?: WalletTypeInfo
-	
+
 	/**
 	 * Information for wallets with multiple types (e.g., both EOA and Smart Wallet)
 	 */
 	multiWalletType?: {
-		categories: WalletTypeCategory[];
-		smartWalletStandards?: SmartWalletStandard[];
-		details?: string;
+		categories: WalletTypeCategory[]
+		smartWalletStandards?: SmartWalletStandard[]
+		details?: string
 	}
 
 	/**

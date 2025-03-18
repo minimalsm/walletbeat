@@ -21,36 +21,43 @@ export function ReferenceLinks({
 	}
 
 	// Debug check - more comprehensive logging
-	console.log("ReferenceLinks component receiving:", 
-		JSON.stringify({
-			referencesLength: references.length,
-			referencesType: Array.isArray(references) ? 'array' : typeof references,
-			firstReference: references[0] ? {
-				hasUrls: !!references[0].urls,
-				urlsLength: references[0].urls?.length,
-				hasExplanation: !!references[0].explanation,
-				urls: references[0].urls || references[0].url
-			} : null
-		}, null, 2)
-	);
-	
+	console.log(
+		'ReferenceLinks component receiving:',
+		JSON.stringify(
+			{
+				referencesLength: references.length,
+				referencesType: Array.isArray(references) ? 'array' : typeof references,
+				firstReference: references[0]
+					? {
+							hasUrls: !!references[0].urls,
+							urlsLength: references[0].urls?.length,
+							hasExplanation: !!references[0].explanation,
+							urls: references[0].urls || references[0].url,
+						}
+					: null,
+			},
+			null,
+			2,
+		),
+	)
+
 	// Make sure we have valid references with urls
 	const validReferences = references.filter(ref => {
 		// Check if the reference has a valid url property
-		const hasValidUrl = 
+		const hasValidUrl =
 			(ref.urls && Array.isArray(ref.urls) && ref.urls.length > 0) ||
-			(ref.url && typeof ref.url === 'string');
-		
+			(ref.url && typeof ref.url === 'string')
+
 		if (!hasValidUrl) {
-			console.warn("Invalid reference without URL:", ref);
+			console.warn('Invalid reference without URL:', ref)
 		}
-		
-		return hasValidUrl;
-	});
-	
+
+		return hasValidUrl
+	})
+
 	if (validReferences.length === 0) {
-		console.warn("No valid references with URLs found");
-		return <></>;
+		console.warn('No valid references with URLs found')
+		return <></>
 	}
 
 	return (
@@ -62,7 +69,7 @@ export function ReferenceLinks({
 				display: 'flex',
 				flexDirection: 'column',
 				gap: 0.5,
-				color: 'var(--text-primary)'
+				color: 'var(--text-primary)',
 			}}
 		>
 			{/* References header */}
@@ -73,13 +80,13 @@ export function ReferenceLinks({
 					alignItems: 'center',
 					gap: 0.5,
 					color: 'var(--text-primary)',
-					fontWeight: 'medium'
+					fontWeight: 'medium',
 				}}
 			>
 				<InfoOutlinedIcon sx={{ fontSize: '0.875rem' }} />
 				Source
 			</Typography>
-			
+
 			{/* References content */}
 			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
 				{validReferences.map((ref, refIndex) => (
@@ -102,7 +109,7 @@ export function ReferenceLinks({
 											gap: 0.5,
 											color: 'primary.main',
 											textDecoration: 'none',
-											'&:hover': { textDecoration: 'underline' }
+											'&:hover': { textDecoration: 'underline' },
 										}}
 									>
 										<LinkIcon fontSize="inherit" />
@@ -122,7 +129,7 @@ export function ReferenceLinks({
 										gap: 0.5,
 										color: 'primary.main',
 										textDecoration: 'none',
-										'&:hover': { textDecoration: 'underline' }
+										'&:hover': { textDecoration: 'underline' },
 									}}
 								>
 									<LinkIcon fontSize="inherit" />
@@ -130,7 +137,7 @@ export function ReferenceLinks({
 								</Link>
 							)}
 						</Box>
-						
+
 						{/* Reference explanation if available in the reference object */}
 						{ref.explanation && (
 							<Typography
@@ -141,7 +148,7 @@ export function ReferenceLinks({
 									fontSize: '0.75rem',
 									lineHeight: 1.2,
 									fontStyle: 'italic',
-									mb: 0.5
+									mb: 0.5,
 								}}
 							>
 								{ref.explanation}
@@ -150,7 +157,7 @@ export function ReferenceLinks({
 					</Box>
 				))}
 			</Box>
-			
+
 			{/* Global explanation if provided to the component */}
 			{explanation && (
 				<Typography
@@ -160,7 +167,7 @@ export function ReferenceLinks({
 						display: 'block',
 						fontSize: '0.7rem',
 						lineHeight: 1.2,
-						fontStyle: 'italic'
+						fontStyle: 'italic',
 					}}
 				>
 					{explanation}

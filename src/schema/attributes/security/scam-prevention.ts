@@ -177,7 +177,9 @@ function evaluateScamAlerts(
 				return [sendTransactionWarning, contractTransactionWarning, scamUrlWarning]
 			default:
 				// In case new wallet profiles are added in the future, provide a reasonable default
-				console.warn(`Unhandled wallet profile: ${walletProfile}, using default scam prevention requirements`);
+				console.warn(
+					`Unhandled wallet profile: ${walletProfile}, using default scam prevention requirements`,
+				)
 				return [sendTransactionWarning, contractTransactionWarning, scamUrlWarning]
 		}
 	})()

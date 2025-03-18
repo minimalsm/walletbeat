@@ -33,8 +33,8 @@ export const frame: Wallet = {
 		contributors: [polymutex, nconsigny],
 		lastUpdated: '2025-03-13',
 		multiWalletType: {
-			categories: [WalletTypeCategory.EOA]
-		}
+			categories: [WalletTypeCategory.EOA],
+		},
 	},
 	features: {
 		profile: WalletProfile.GENERIC,
@@ -76,7 +76,7 @@ export const frame: Wallet = {
 			hardwareWalletClearSigning: {
 				clearSigningSupport: {
 					level: ClearSigningLevel.NONE,
-					details: 'No hardware wallet clear signing information available.'
+					details: 'No hardware wallet clear signing information available.',
 				},
 				ref: null,
 			},
