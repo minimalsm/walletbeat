@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import React from 'react'
 import {
 	useReactTable,
@@ -5,43 +7,41 @@ import {
 	flexRender,
 	getExpandedRowModel,
 } from '@tanstack/react-table'
+import { ratedWallets } from '@/data/wallets'
+import { useState } from 'react'
 
-const defaultData = [
-	{
-		id: 1,
-		name: 'John Doe',
-		age: 28,
-		occupation: 'Developer',
-		subRows: [
-			{ id: 11, name: 'John Doe Jr.', age: 5, occupation: 'Kid' },
-			{ id: 12, name: 'Jane Doe', age: 3, occupation: 'Kid' },
-		],
-	},
-	{
-		id: 2,
-		name: 'Jane Smith',
-		age: 34,
-		occupation: 'Designer',
-		subRows: [{ id: 21, name: 'Jimmy Smith', age: 7, occupation: 'Kid' }],
-	},
-	{ id: 3, name: 'Alice Johnson', age: 25, occupation: 'Project Manager' },
-	{ id: 4, name: 'Bob Brown', age: 45, occupation: 'QA Engineer' },
-	{ id: 5, name: 'Michael Green', age: 31, occupation: 'Product Owner' },
-	{ id: 6, name: 'Sara Blue', age: 29, occupation: 'Developer' },
-	{ id: 7, name: 'Emma White', age: 26, occupation: 'Data Analyst' },
-	{ id: 8, name: 'Tom Black', age: 39, occupation: 'Support Engineer' },
-	{ id: 9, name: 'Lucy Red', age: 32, occupation: 'UX Researcher' },
-	{ id: 10, name: 'Mark Yellow', age: 40, occupation: 'CTO' },
-]
+const defaultData = Object.values(ratedWallets).map(wallet => ({
+	id: wallet.metadata.id,
+	name: wallet.metadata.displayName,
+	wallet: wallet,
+	// Each wallet row has a subRow for details
+	subRows: [
+		{
+			id: wallet.metadata.id + '-detail',
+			name: 'Details',
+			wallet: wallet,
+			isDetailRow: true,
+		},
+	],
+}))
 
+// Define columns
 const columns = [
 	{
-		header: 'Name',
+		header: 'Wallet',
 		accessorKey: 'name',
 		cell: ({ row, getValue }) => (
 			<div style={{ paddingLeft: row.depth * 20 }}>
 				{row.getCanExpand() ? (
-					<button onClick={row.getToggleExpandedHandler()}>
+					<button
+						onClick={row.getToggleExpandedHandler()}
+						style={{
+							background: 'none',
+							border: 'none',
+							cursor: 'pointer',
+							padding: '0 4px',
+						}}
+					>
 						{row.getIsExpanded() ? '▼' : '▶'}
 					</button>
 				) : (
@@ -51,13 +51,12 @@ const columns = [
 			</div>
 		),
 	},
-	{ header: 'Age', accessorKey: 'age' },
-	{ header: 'Occupation', accessorKey: 'occupation' },
 ]
 
-export default function ExpandableTable() {
+export default function WalletTable() {
 	const [data] = React.useState(() => [...defaultData])
 
+	// Create table
 	const table = useReactTable({
 		data,
 		columns,
