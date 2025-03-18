@@ -17,8 +17,14 @@ import type {
 import type { Variant } from '@/schema/variants'
 import type { EvaluationTree } from '@/schema/attribute-groups'
 import type { SxProps } from '@mui/material'
-import { securityAttributeGroup } from '@/schema/attribute-groups'
-import type { AttributeGroup, ValueSet } from '@/schema/attributes'
+import {
+	securityAttributeGroup,
+	privacyAttributeGroup,
+	selfSovereigntyAttributeGroup,
+	transparencyAttributeGroup,
+	ecosystemAttributeGroup,
+} from '@/schema/attribute-groups'
+import type { AttributeGroup, ValueSet, EvaluatedGroup } from '@/schema/attributes'
 import type { RatedWallet } from '@/schema/wallet'
 
 // Create TableStateHandle class for variant selection management
@@ -105,7 +111,7 @@ class WalletRow implements WalletRowStateHandle {
 
 	render<Vs extends ValueSet>(
 		attrGroup: AttributeGroup<Vs>,
-		evalGroupFn: (tree: EvaluationTree) => Record<string, unknown>,
+		evalGroupFn: (tree: EvaluationTree) => EvaluatedGroup<Vs>,
 	): React.JSX.Element {
 		return <WalletRatingCell<Vs> row={this} attrGroup={attrGroup} evalGroupFn={evalGroupFn} />
 	}
@@ -120,6 +126,10 @@ const prepareTableData = (
 	displayName: string
 	walletType: string
 	security: string
+	privacy: string
+	selfSovereignty: string
+	transparency: string
+	ecosystem: string
 }> =>
 	walletRows.map(row => ({
 		id: row.id,
@@ -128,6 +138,10 @@ const prepareTableData = (
 		displayName: row.wallet.metadata.displayName,
 		walletType: row.wallet.metadata.walletType?.category ?? 'EOA',
 		security: securityAttributeGroup.id,
+		privacy: privacyAttributeGroup.id,
+		selfSovereignty: selfSovereigntyAttributeGroup.id,
+		transparency: transparencyAttributeGroup.id,
+		ecosystem: ecosystemAttributeGroup.id,
 	}))
 
 export default function WalletTable(): ReactElement {
@@ -164,7 +178,7 @@ export default function WalletTable(): ReactElement {
 					wallet.metadata.walletType?.details ?? wallet.metadata.walletType?.category ?? 'EOA'
 				return (
 					<Tooltip title={detailedText} arrow placement="top">
-						<Box>{info.getValue() as unknown as string}</Box>
+						<Box>{info.getValue() as string}</Box>
 					</Tooltip>
 				)
 			},
@@ -173,6 +187,28 @@ export default function WalletTable(): ReactElement {
 			accessorKey: 'security',
 			header: 'Security',
 			cell: info => info.row.original.row.render(securityAttributeGroup, tree => tree.security),
+		},
+		{
+			accessorKey: 'privacy',
+			header: 'Privacy',
+			cell: info => info.row.original.row.render(privacyAttributeGroup, tree => tree.privacy),
+		},
+		{
+			accessorKey: 'selfSovereignty',
+			header: 'Self Sovereignty',
+			cell: info =>
+				info.row.original.row.render(selfSovereigntyAttributeGroup, tree => tree.selfSovereignty),
+		},
+		{
+			accessorKey: 'transparency',
+			header: 'Transparency',
+			cell: info =>
+				info.row.original.row.render(transparencyAttributeGroup, tree => tree.transparency),
+		},
+		{
+			accessorKey: 'ecosystem',
+			header: 'Ecosystem',
+			cell: info => info.row.original.row.render(ecosystemAttributeGroup, tree => tree.ecosystem),
 		},
 	]
 
@@ -284,7 +320,7 @@ export default function WalletTable(): ReactElement {
 						</thead>
 						<tbody>
 							{table.getRowModel().rows.map((row, rowIdx) => {
-								const rowData = row.original.row as WalletRow
+								const rowData = row.original.row
 								const isExpanded = rowData.expanded
 								const rowHeight = isExpanded ? '220px' : '140px'
 								const customSx = rowData.rowWideStyle
