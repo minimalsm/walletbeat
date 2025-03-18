@@ -1,29 +1,18 @@
-// Constants
-import { betaSiteRoot } from '@/constants'
-
-// Layouts
-import Layout from '../layouts/Layout.astro'
-
 // Components
-import { IconLink } from '@/ui/atoms/IconLink'
 import WalletTable from '@/ui/organisms/WalletTable'
 
-import { Box, Typography } from '@mui/material'
-import HelpCenterIcon from '@mui/icons-material/HelpCenter'
-import ForumIcon from '@mui/icons-material/Forum'
-import FoundationIcon from '@mui/icons-material/Foundation'
-import GitHubIcon from '@mui/icons-material/GitHub'
 import { NavigationPageLayout } from '@/layouts/NavigationPageLayout'
 import { navigationAbout, navigationCriteria } from '@/components/navigation'
 import { LuWallet, LuKey } from 'react-icons/lu'
 import type { FC } from 'react'
 import { wallets } from '@/data/wallets'
 import { hardwareWallets } from '@/data/hardware-wallets'
-import type { Wallet } from '@/schema/wallet'
+
+// Type-safe object key access
+type WalletsKey = keyof typeof wallets
+type HardwareWalletsKey = keyof typeof hardwareWallets
 
 export const HomePage: FC = () => (
-	// hi
-
 	<NavigationPageLayout
 		groups={[
 			{
@@ -45,8 +34,11 @@ export const HomePage: FC = () => (
 						title: 'Wallets',
 						icon: <LuWallet />,
 						href: '/',
+						id: 'wallets-nav',
 						children: Object.keys(wallets).map(key => {
-							const wallet = wallets[key as keyof typeof wallets] as Wallet
+							// Using type-safe keys
+							const safeKey = key as WalletsKey
+							const wallet = wallets[safeKey]
 
 							return {
 								title: wallet.metadata.displayName,
@@ -73,7 +65,9 @@ export const HomePage: FC = () => (
 						href: '/',
 						id: 'hardware-wallets',
 						children: Object.keys(hardwareWallets).map(key => {
-							const wallet = hardwareWallets[key as keyof typeof hardwareWallets] as Wallet
+							// Using type-safe keys
+							const safeKey = key as HardwareWalletsKey
+							const wallet = hardwareWallets[safeKey]
 
 							// Simplified display names for hardware wallets
 							let displayName = wallet.metadata.displayName
@@ -142,40 +136,10 @@ export const HomePage: FC = () => (
 							.
 						</p>
 					</div>
-					{/* <div className="flex items-center">
-						<img src="/banner.png" className="h-[210px] w-auto" />
-					</div> */}
 				</div>
 			</div>
 
-			{/* <div className="w-full flex flex-col gap-2">
-				<h2 className="font-bold">Find a wallet that suits you</h2>
-				<div className="flex gap-4 w-full flex-wrap xl:flex-nowrap flex-col xl:flex-row">
-					{[
-						{
-							title: '🤷‍♀️ New to Crypto',
-							description: 'First time user looking for beginner wallet.',
-							id: 'beginner',
-						},
-						{
-							title: '📊 Finance',
-							description: 'Looking for a wallet for your crypto portfolio.',
-						},
-						{
-							title: '🛠️ Developer',
-							description: 'Looking for a wallet for your crypto portfolio.',
-						},
-					].map(item => (
-						<div key={item.id} className="flex flex-col gap-2 card flex-1">
-							<h3 className="font-bold text-accent">{item.title}</h3>
-							<div className="text-secondary">{item.description}</div>
-						</div>
-					))}
-				</div>
-			</div> */}
-
 			<div className="w-full flex flex-col gap-2 p-4 md:p-8">
-				{/* <h2 className="font-bold">Explore all the wallets</h2> */}
 				<WalletTable />
 			</div>
 		</div>
