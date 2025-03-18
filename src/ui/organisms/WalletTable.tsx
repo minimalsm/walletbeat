@@ -27,6 +27,11 @@ import {
 import type { AttributeGroup, ValueSet, EvaluatedGroup } from '@/schema/attributes'
 import type { RatedWallet } from '@/schema/wallet'
 import { WalletTypeCategory, SmartWalletStandard } from '@/schema/features/wallet-type'
+import { ContentType, type TypographicContent } from '@/types/content'
+import { RenderTypographicContent } from '@/ui/atoms/RenderTypographicContent'
+import { erc4337 } from '@/data/eips/erc-4337'
+import { eip7702 } from '@/data/eips/eip-7702'
+import { eipMarkdownLink } from '@/schema/eips'
 
 // Create TableStateHandle class for variant selection management
 class TableStateHandle implements WalletTableStateHandle {
@@ -174,20 +179,6 @@ const prepareTableData = (
 		ecosystem: ecosystemAttributeGroup.id,
 	}))
 
-// Define display strings for wallet types
-const WALLET_TYPE_DISPLAY: Record<WalletTypeCategory, string> = {
-	[WalletTypeCategory.EOA]: 'EOA',
-	[WalletTypeCategory.SMART_WALLET]: 'SW',
-	[WalletTypeCategory.HARDWARE_WALLET]: 'HW',
-}
-
-// Define display strings for smart wallet standards
-const SMART_WALLET_STANDARD_DISPLAY: Record<SmartWalletStandard, string> = {
-	[SmartWalletStandard.ERC_4337]: 'ERC-4337',
-	[SmartWalletStandard.ERC_7702]: 'ERC-7702',
-	[SmartWalletStandard.OTHER]: 'Other',
-}
-
 export default function WalletTable(): ReactElement {
 	// Set up table and row state
 	const [tableState, setTableState] = useState<WalletTableState>({
@@ -218,125 +209,154 @@ export default function WalletTable(): ReactElement {
 			cell: info => {
 				const row = info.row.original.row
 				const wallet = row.wallet
-				const walletType = wallet.metadata.walletType?.category ?? WalletTypeCategory.EOA
-				const isSmartWallet = row.isSmartWallet()
 
-				// Get standards from wallet
-				const standards: SmartWalletStandard[] = []
+				// Determine wallet type display
+				let walletTypeDisplay = 'EOA'
+				const walletType = wallet.metadata.walletType?.category
 
-				// Check for standards in multiWalletType
-				if (wallet.metadata.multiWalletType?.smartWalletStandards) {
-					standards.push(...wallet.metadata.multiWalletType.smartWalletStandards)
-				}
-				// Check for standard in regular walletType
-				else if (isSmartWallet && wallet.metadata.walletType?.smartWalletStandard) {
-					standards.push(wallet.metadata.walletType.smartWalletStandard)
+				if (walletType === WalletTypeCategory.SMART_WALLET) {
+					walletTypeDisplay = 'SW'
+				} else if (walletType === WalletTypeCategory.HARDWARE_WALLET) {
+					walletTypeDisplay = 'HW'
 				}
 
-				// Prepare tooltip text
-				let tooltipText = 'EOA'
+				// If multi-wallet type, combine display names
+				if (wallet.metadata.multiWalletType != null) {
+					const typeLabels = wallet.metadata.multiWalletType.categories.map(t => {
+						if (t === WalletTypeCategory.EOA) {
+							return 'EOA'
+						}
+						if (t === WalletTypeCategory.SMART_WALLET) {
+							return 'SW'
+						}
+						if (t === WalletTypeCategory.HARDWARE_WALLET) {
+							return 'HW'
+						}
+						return String(t)
+					})
+					walletTypeDisplay = typeLabels.join(' & ')
+				}
 
-				if (walletType === WalletTypeCategory.EOA) {
-					tooltipText = 'Externally Owned Account'
-				} else if (walletType === WalletTypeCategory.SMART_WALLET) {
+				// Get tooltip text
+				let tooltipText = 'Externally Owned Account'
+				if (walletType === WalletTypeCategory.SMART_WALLET) {
 					tooltipText = 'Smart Wallet'
 				} else if (walletType === WalletTypeCategory.HARDWARE_WALLET) {
 					tooltipText = 'Hardware Wallet'
 				}
 
-				// Add standards to tooltip if present
+				// Get smart wallet standards
+				const standards: SmartWalletStandard[] = []
+
+				if (wallet.metadata.multiWalletType?.smartWalletStandards != null) {
+					standards.push(...wallet.metadata.multiWalletType.smartWalletStandards)
+				} else if (row.isSmartWallet() && wallet.metadata.walletType?.smartWalletStandard != null) {
+					standards.push(wallet.metadata.walletType.smartWalletStandard)
+				}
+
+				// Add standards to tooltip text
 				if (standards.length > 0) {
 					const standardNames = standards
-						.map(s =>
-							s === SmartWalletStandard.ERC_4337
-								? 'ERC-4337'
-								: s === SmartWalletStandard.ERC_7702
-									? 'ERC-7702'
-									: 'Other',
-						)
+						.map(s => {
+							if (s === SmartWalletStandard.ERC_4337) {
+								return 'ERC-4337'
+							}
+							if (s === SmartWalletStandard.ERC_7702) {
+								return 'ERC-7702'
+							}
+							return 'Other'
+						})
 						.join(', ')
 					tooltipText += ` (${standardNames})`
 				}
 
-				// Determine display name
-				let displayName = 'EOA'
-				if (walletType === WalletTypeCategory.EOA) {
-					displayName = 'EOA'
-				} else if (walletType === WalletTypeCategory.SMART_WALLET) {
-					displayName = 'SW'
-				} else if (walletType === WalletTypeCategory.HARDWARE_WALLET) {
-					displayName = 'HW'
-				}
+				// Create EIP standard badges
+				const renderEipBadges = (): React.ReactNode => {
+					if (standards.length === 0) {
+						return null
+					}
 
-				// For multi-wallet types, combine display names
-				if (wallet.metadata.multiWalletType) {
-					const types = wallet.metadata.multiWalletType.categories.map(t =>
-						t === WalletTypeCategory.EOA
-							? 'EOA'
-							: t === WalletTypeCategory.SMART_WALLET
-								? 'SW'
-								: t === WalletTypeCategory.HARDWARE_WALLET
-									? 'HW'
-									: String(t),
+					return (
+						<Box sx={{ display: 'flex', gap: '4px', flexWrap: 'wrap', mt: 0.5 }}>
+							{standards.map(std => {
+								// Create markdown content for standard
+								let content: TypographicContent | null = null
+
+								if (std === SmartWalletStandard.ERC_4337) {
+									content = {
+										contentType: ContentType.MARKDOWN,
+										markdown: eipMarkdownLink(erc4337),
+									}
+								} else if (std === SmartWalletStandard.ERC_7702) {
+									content = {
+										contentType: ContentType.MARKDOWN,
+										markdown: eipMarkdownLink(eip7702),
+									}
+								}
+
+								if (content != null) {
+									return (
+										<Box
+											key={std}
+											sx={{
+												fontSize: '0.8rem',
+												'& a': {
+													color: 'var(--hashtag-text, #1565c0)',
+													backgroundColor: 'var(--hashtag-bg, #e3f2fd)',
+													borderRadius: '4px',
+													padding: '1px 6px',
+													textDecoration: 'none',
+													fontWeight: 'medium',
+													'&:hover': {
+														textDecoration: 'underline',
+														backgroundColor: 'var(--hashtag-bg-hover, #bbdefb)',
+													},
+												},
+											}}
+										>
+											<RenderTypographicContent content={content} />
+										</Box>
+									)
+								}
+
+								// Fallback for OTHER standard
+								return (
+									<Box
+										key={std}
+										component="a"
+										href="#"
+										sx={{
+											fontSize: '0.75rem',
+											fontWeight: 'medium',
+											color: 'var(--hashtag-text, #1565c0)',
+											backgroundColor: 'var(--hashtag-bg, #e3f2fd)',
+											borderRadius: '4px',
+											padding: '1px 6px',
+											display: 'inline-flex',
+											alignItems: 'center',
+											lineHeight: 1.2,
+											textDecoration: 'none',
+											'&:hover': {
+												textDecoration: 'underline',
+												backgroundColor: 'var(--hashtag-bg-hover, #bbdefb)',
+											},
+										}}
+									>
+										#other
+									</Box>
+								)
+							})}
+						</Box>
 					)
-					displayName = types.join(' & ')
 				}
 
 				return (
 					<Tooltip title={tooltipText} arrow placement="top">
-						<Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-							<Box
-								sx={{
-									fontWeight: 'medium',
-									fontSize: '1.05rem',
-									lineHeight: 1.2,
-								}}
-							>
-								{displayName}
+						<Box sx={{ display: 'flex', flexDirection: 'column' }}>
+							<Box sx={{ fontWeight: 'medium', fontSize: '1.05rem', lineHeight: 1.2 }}>
+								{walletTypeDisplay}
 							</Box>
-
-							{standards.length > 0 && (
-								<Box sx={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-									{standards.map(std => (
-										<Box
-											key={std}
-											component="a"
-											href={
-												std === SmartWalletStandard.ERC_4337
-													? 'https://eips.ethereum.org/EIPS/eip-4337'
-													: std === SmartWalletStandard.ERC_7702
-														? 'https://eips.ethereum.org/EIPS/eip-7702'
-														: '#'
-											}
-											target="_blank"
-											rel="noopener"
-											sx={{
-												fontSize: '0.75rem',
-												fontWeight: 'medium',
-												color: 'var(--hashtag-text, #1565c0)',
-												backgroundColor: 'var(--hashtag-bg, #e3f2fd)',
-												borderRadius: '4px',
-												padding: '1px 6px',
-												display: 'inline-flex',
-												alignItems: 'center',
-												lineHeight: 1.2,
-												textDecoration: 'none',
-												'&:hover': {
-													textDecoration: 'underline',
-													backgroundColor: 'var(--hashtag-bg-hover, #bbdefb)',
-												},
-											}}
-										>
-											#
-											{std === SmartWalletStandard.ERC_4337
-												? '4337'
-												: std === SmartWalletStandard.ERC_7702
-													? '7702'
-													: 'other'}
-										</Box>
-									))}
-								</Box>
-							)}
+							{renderEipBadges()}
 						</Box>
 					</Tooltip>
 				)
