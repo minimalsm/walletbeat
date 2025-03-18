@@ -26,6 +26,7 @@ import {
 } from '@/schema/attribute-groups'
 import type { AttributeGroup, ValueSet, EvaluatedGroup } from '@/schema/attributes'
 import type { RatedWallet } from '@/schema/wallet'
+import { WalletTypeCategory, SmartWalletStandard } from '@/schema/features/wallet-type'
 
 // Create TableStateHandle class for variant selection management
 class TableStateHandle implements WalletTableStateHandle {
@@ -109,11 +110,40 @@ class WalletRow implements WalletRowStateHandle {
 		}))
 	}
 
+	/** Get the height of the row in pixels. */
+	getRowHeight(): number {
+		// Return different heights based on expanded state
+		// Increase row height for all rows to accommodate pie charts better
+		return this.expanded ? 220 : 140
+	}
+
 	render<Vs extends ValueSet>(
 		attrGroup: AttributeGroup<Vs>,
 		evalGroupFn: (tree: EvaluationTree) => EvaluatedGroup<Vs>,
 	): React.JSX.Element {
 		return <WalletRatingCell<Vs> row={this} attrGroup={attrGroup} evalGroupFn={evalGroupFn} />
+	}
+
+	/** Check if wallet is a smart wallet */
+	isSmartWallet(): boolean {
+		if (this.wallet.metadata.multiWalletType != null) {
+			return this.wallet.metadata.multiWalletType.categories.includes(
+				WalletTypeCategory.SMART_WALLET,
+			)
+		}
+		return this.wallet.metadata.walletType?.category === WalletTypeCategory.SMART_WALLET
+	}
+
+	/** Check if wallet has a specific smart wallet standard */
+	hasStandard(standard: SmartWalletStandard): boolean {
+		const multiStandards = this.wallet.metadata.multiWalletType?.smartWalletStandards
+		const singleStandard = this.wallet.metadata.walletType?.smartWalletStandard
+
+		if (multiStandards != null) {
+			return multiStandards.includes(standard)
+		}
+
+		return singleStandard === standard
 	}
 }
 
@@ -136,13 +166,27 @@ const prepareTableData = (
 		// Store the row object in each row data for access in cell renderers
 		row: row,
 		displayName: row.wallet.metadata.displayName,
-		walletType: row.wallet.metadata.walletType?.category ?? 'EOA',
+		walletType: row.wallet.metadata.walletType?.category ?? WalletTypeCategory.EOA,
 		security: securityAttributeGroup.id,
 		privacy: privacyAttributeGroup.id,
 		selfSovereignty: selfSovereigntyAttributeGroup.id,
 		transparency: transparencyAttributeGroup.id,
 		ecosystem: ecosystemAttributeGroup.id,
 	}))
+
+// Define display strings for wallet types
+const WALLET_TYPE_DISPLAY: Record<WalletTypeCategory, string> = {
+	[WalletTypeCategory.EOA]: 'EOA',
+	[WalletTypeCategory.SMART_WALLET]: 'SW',
+	[WalletTypeCategory.HARDWARE_WALLET]: 'HW',
+}
+
+// Define display strings for smart wallet standards
+const SMART_WALLET_STANDARD_DISPLAY: Record<SmartWalletStandard, string> = {
+	[SmartWalletStandard.ERC_4337]: 'ERC-4337',
+	[SmartWalletStandard.ERC_7702]: 'ERC-7702',
+	[SmartWalletStandard.OTHER]: 'Other',
+}
 
 export default function WalletTable(): ReactElement {
 	// Set up table and row state
@@ -174,11 +218,126 @@ export default function WalletTable(): ReactElement {
 			cell: info => {
 				const row = info.row.original.row
 				const wallet = row.wallet
-				const detailedText =
-					wallet.metadata.walletType?.details ?? wallet.metadata.walletType?.category ?? 'EOA'
+				const walletType = wallet.metadata.walletType?.category ?? WalletTypeCategory.EOA
+				const isSmartWallet = row.isSmartWallet()
+
+				// Get standards from wallet
+				const standards: SmartWalletStandard[] = []
+
+				// Check for standards in multiWalletType
+				if (wallet.metadata.multiWalletType?.smartWalletStandards) {
+					standards.push(...wallet.metadata.multiWalletType.smartWalletStandards)
+				}
+				// Check for standard in regular walletType
+				else if (isSmartWallet && wallet.metadata.walletType?.smartWalletStandard) {
+					standards.push(wallet.metadata.walletType.smartWalletStandard)
+				}
+
+				// Prepare tooltip text
+				let tooltipText = 'EOA'
+
+				if (walletType === WalletTypeCategory.EOA) {
+					tooltipText = 'Externally Owned Account'
+				} else if (walletType === WalletTypeCategory.SMART_WALLET) {
+					tooltipText = 'Smart Wallet'
+				} else if (walletType === WalletTypeCategory.HARDWARE_WALLET) {
+					tooltipText = 'Hardware Wallet'
+				}
+
+				// Add standards to tooltip if present
+				if (standards.length > 0) {
+					const standardNames = standards
+						.map(s =>
+							s === SmartWalletStandard.ERC_4337
+								? 'ERC-4337'
+								: s === SmartWalletStandard.ERC_7702
+									? 'ERC-7702'
+									: 'Other',
+						)
+						.join(', ')
+					tooltipText += ` (${standardNames})`
+				}
+
+				// Determine display name
+				let displayName = 'EOA'
+				if (walletType === WalletTypeCategory.EOA) {
+					displayName = 'EOA'
+				} else if (walletType === WalletTypeCategory.SMART_WALLET) {
+					displayName = 'SW'
+				} else if (walletType === WalletTypeCategory.HARDWARE_WALLET) {
+					displayName = 'HW'
+				}
+
+				// For multi-wallet types, combine display names
+				if (wallet.metadata.multiWalletType) {
+					const types = wallet.metadata.multiWalletType.categories.map(t =>
+						t === WalletTypeCategory.EOA
+							? 'EOA'
+							: t === WalletTypeCategory.SMART_WALLET
+								? 'SW'
+								: t === WalletTypeCategory.HARDWARE_WALLET
+									? 'HW'
+									: String(t),
+					)
+					displayName = types.join(' & ')
+				}
+
 				return (
-					<Tooltip title={detailedText} arrow placement="top">
-						<Box>{info.getValue() as string}</Box>
+					<Tooltip title={tooltipText} arrow placement="top">
+						<Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+							<Box
+								sx={{
+									fontWeight: 'medium',
+									fontSize: '1.05rem',
+									lineHeight: 1.2,
+								}}
+							>
+								{displayName}
+							</Box>
+
+							{standards.length > 0 && (
+								<Box sx={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+									{standards.map(std => (
+										<Box
+											key={std}
+											component="a"
+											href={
+												std === SmartWalletStandard.ERC_4337
+													? 'https://eips.ethereum.org/EIPS/eip-4337'
+													: std === SmartWalletStandard.ERC_7702
+														? 'https://eips.ethereum.org/EIPS/eip-7702'
+														: '#'
+											}
+											target="_blank"
+											rel="noopener"
+											sx={{
+												fontSize: '0.75rem',
+												fontWeight: 'medium',
+												color: 'var(--hashtag-text, #1565c0)',
+												backgroundColor: 'var(--hashtag-bg, #e3f2fd)',
+												borderRadius: '4px',
+												padding: '1px 6px',
+												display: 'inline-flex',
+												alignItems: 'center',
+												lineHeight: 1.2,
+												textDecoration: 'none',
+												'&:hover': {
+													textDecoration: 'underline',
+													backgroundColor: 'var(--hashtag-bg-hover, #bbdefb)',
+												},
+											}}
+										>
+											#
+											{std === SmartWalletStandard.ERC_4337
+												? '4337'
+												: std === SmartWalletStandard.ERC_7702
+													? '7702'
+													: 'other'}
+										</Box>
+									))}
+								</Box>
+							)}
+						</Box>
 					</Tooltip>
 				)
 			},
@@ -321,8 +480,7 @@ export default function WalletTable(): ReactElement {
 						<tbody>
 							{table.getRowModel().rows.map((row, rowIdx) => {
 								const rowData = row.original.row
-								const isExpanded = rowData.expanded
-								const rowHeight = isExpanded ? '220px' : '140px'
+								const rowHeight = `${rowData.getRowHeight()}px`
 								const customSx = rowData.rowWideStyle
 
 								return (
