@@ -117,7 +117,7 @@ const defaultData = Object.values(ratedWallets).map(wallet => {
 				// Additional metadata for detail display
 				typeDescription: detailedType,
 				standards: standardsDisplay,
-				websiteUrl: wallet.metadata.websiteUrl || 'Not available',
+				websiteUrl: wallet.metadata.url || 'Not available',
 				// Empty subRows for detail rows (they can't be expanded further)
 				subRows: [],
 			},
