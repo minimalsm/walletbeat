@@ -299,80 +299,65 @@ function PizzaSliceChart({
 				{/* Generate different slice patterns based on count */}
 				{attributeCount === 2 && (
 					// For 2 attributes (Privacy category)
-					<>
-						<div
-							className="absolute w-1/2 h-full top-0 left-0"
-							style={{ backgroundColor: sliceColors[0] }}
-						></div>
-						<div
-							className="absolute w-1/2 h-full top-0 right-0"
-							style={{ backgroundColor: sliceColors[1] }}
-						></div>
-					</>
+					<div
+						className="absolute inset-0 w-full h-full"
+						style={{
+							backgroundImage: `conic-gradient(
+								${sliceColors[0]} 0deg 180deg, 
+								${sliceColors[1]} 180deg 360deg
+							)`,
+							borderRadius: '50%',
+						}}
+					></div>
 				)}
 
 				{attributeCount === 3 && (
 					// For 3 attributes (Self Sovereignty and Ecosystem categories)
-					<>
-						<div
-							className="absolute w-1/2 h-1/2 top-0 left-0 rounded-tl-full"
-							style={{ backgroundColor: sliceColors[0] }}
-						></div>
-						<div
-							className="absolute w-1/2 h-1/2 top-0 right-0 rounded-tr-full"
-							style={{ backgroundColor: sliceColors[1] }}
-						></div>
-						<div
-							className="absolute w-full h-1/2 bottom-0"
-							style={{ backgroundColor: sliceColors[2] }}
-						></div>
-					</>
+					<div
+						className="absolute inset-0 w-full h-full"
+						style={{
+							backgroundImage: `conic-gradient(
+								${sliceColors[0]} 0deg 120deg, 
+								${sliceColors[1]} 120deg 240deg,
+								${sliceColors[2]} 240deg 360deg
+							)`,
+							borderRadius: '50%',
+						}}
+					></div>
 				)}
 
 				{attributeCount === 4 && (
 					// For 4 attributes (Transparency category)
-					<>
-						<div
-							className="absolute w-1/2 h-1/2 top-0 left-0 rounded-tl-full"
-							style={{ backgroundColor: sliceColors[0] }}
-						></div>
-						<div
-							className="absolute w-1/2 h-1/2 top-0 right-0 rounded-tr-full"
-							style={{ backgroundColor: sliceColors[1] }}
-						></div>
-						<div
-							className="absolute w-1/2 h-1/2 bottom-0 right-0 rounded-br-full"
-							style={{ backgroundColor: sliceColors[2] }}
-						></div>
-						<div
-							className="absolute w-1/2 h-1/2 bottom-0 left-0 rounded-bl-full"
-							style={{ backgroundColor: sliceColors[3] }}
-						></div>
-					</>
+					<div
+						className="absolute inset-0 w-full h-full"
+						style={{
+							backgroundImage: `conic-gradient(
+								${sliceColors[0]} 0deg 90deg, 
+								${sliceColors[1]} 90deg 180deg,
+								${sliceColors[2]} 180deg 270deg,
+								${sliceColors[3]} 270deg 360deg
+							)`,
+							borderRadius: '50%',
+						}}
+					></div>
 				)}
 
 				{/* For larger numbers (Security has 8 attributes) */}
-				{attributeCount > 4 &&
-					Array.from({ length: attributeCount }).map((_, index) => {
-						const angleDegrees = 360 / attributeCount
-						const startAngle = index * angleDegrees
-						return (
-							<div
-								key={index}
-								className="absolute"
-								style={{
-									width: '100%',
-									height: '100%',
-									backgroundColor: sliceColors[index] || '#bdc3c7', // Use the corresponding color or default to gray
-									clipPath: `polygon(50% 50%, ${50 + 50 * Math.cos((startAngle * Math.PI) / 180)}% ${
-										50 + 50 * Math.sin((startAngle * Math.PI) / 180)
-									}%, ${50 + 50 * Math.cos(((startAngle + angleDegrees) * Math.PI) / 180)}% ${
-										50 + 50 * Math.sin(((startAngle + angleDegrees) * Math.PI) / 180)
-									}%)`,
-								}}
-							></div>
-						)
-					})}
+				{attributeCount > 4 && (
+					<div
+						className="absolute inset-0 w-full h-full"
+						style={{
+							backgroundImage: `conic-gradient(${sliceColors
+								.map((color, index) => {
+									const startAngle = (index * 360) / attributeCount
+									const endAngle = ((index + 1) * 360) / attributeCount
+									return `${color} ${startAngle}deg ${endAngle}deg${index < attributeCount - 1 ? ',' : ''}`
+								})
+								.join(' ')})`,
+							borderRadius: '50%',
+						}}
+					></div>
+				)}
 			</div>
 			<div className="mt-1 text-xs font-medium">{attrGroup.displayName}</div>
 		</div>
