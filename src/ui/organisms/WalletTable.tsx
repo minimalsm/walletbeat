@@ -223,15 +223,13 @@ function PizzaSliceChart({
 	attrGroup: AttributeGroup<any>
 	evalTree: EvaluationTree
 }): React.ReactElement {
-	// Get the attribute ratings for this group
+	// Get attribute ratings and calculate overall score
 	const attributeRatings = getAttributeRatings(attrGroup, evalTree)
 	const attributeCount = attributeRatings.length > 0 ? attributeRatings.length : 4 // Default to 4 if no attributes
-
-	// Calculate overall score
 	let overallScore = 0
 
 	try {
-		// Using a more straightforward approach with type assertions to fix type errors
+		// Calculate the overall score
 		switch (attrGroup.id) {
 			case 'security':
 				if (evalTree.security) {
@@ -268,80 +266,96 @@ function PizzaSliceChart({
 		console.error(`Error calculating score for ${attrGroup.id}:`, e)
 	}
 
-	// Determine tooltip text with category name and score
-	const tooltipText = `${attrGroup.displayName}: ${Math.round(overallScore * 100)}%`
+	const tooltipText = `${attrGroup.displayName}: ${Math.round(overallScore * 100)}% (${attributeCount} attributes)`
 
-	// Create the pizza slice visualization
+	// Generate the actual slice colors from the real data
+	const sliceColors = attributeRatings.map(attr => {
+		switch (attr.rating) {
+			case Rating.PASS:
+				return '#2ecc71' // Green
+			case Rating.PARTIAL:
+				return '#f1c40f' // Yellow
+			case Rating.FAIL:
+				return '#e74c3c' // Red
+			default:
+				return '#bdc3c7' // Gray
+		}
+	})
+
+	// If we don't have any ratings, use default colors
+	if (sliceColors.length === 0) {
+		for (let i = 0; i < 4; i++) {
+			sliceColors.push('#bdc3c7') // Gray
+		}
+	}
+
+	// Create the pizza slice visualization with the correct number of slices
 	return (
 		<div className="flex flex-col items-center">
 			<div
-				className="w-16 h-16 rounded-full overflow-hidden relative cursor-help"
+				className="w-10 h-10 rounded-full overflow-hidden relative cursor-help"
 				title={tooltipText}
 			>
-				{/* Generate pie slices based on attribute count */}
-				{attributeCount > 0 &&
+				{/* Generate different slice patterns based on count */}
+				{attributeCount === 2 && (
+					// For 2 attributes (Privacy category)
+					<>
+						<div
+							className="absolute w-1/2 h-full top-0 left-0"
+							style={{ backgroundColor: sliceColors[0] }}
+						></div>
+						<div
+							className="absolute w-1/2 h-full top-0 right-0"
+							style={{ backgroundColor: sliceColors[1] }}
+						></div>
+					</>
+				)}
+
+				{attributeCount === 3 && (
+					// For 3 attributes (Self Sovereignty and Ecosystem categories)
+					<>
+						<div
+							className="absolute w-1/2 h-1/2 top-0 left-0 rounded-tl-full"
+							style={{ backgroundColor: sliceColors[0] }}
+						></div>
+						<div
+							className="absolute w-1/2 h-1/2 top-0 right-0 rounded-tr-full"
+							style={{ backgroundColor: sliceColors[1] }}
+						></div>
+						<div
+							className="absolute w-full h-1/2 bottom-0"
+							style={{ backgroundColor: sliceColors[2] }}
+						></div>
+					</>
+				)}
+
+				{attributeCount === 4 && (
+					// For 4 attributes (Transparency category)
+					<>
+						<div
+							className="absolute w-1/2 h-1/2 top-0 left-0 rounded-tl-full"
+							style={{ backgroundColor: sliceColors[0] }}
+						></div>
+						<div
+							className="absolute w-1/2 h-1/2 top-0 right-0 rounded-tr-full"
+							style={{ backgroundColor: sliceColors[1] }}
+						></div>
+						<div
+							className="absolute w-1/2 h-1/2 bottom-0 right-0 rounded-br-full"
+							style={{ backgroundColor: sliceColors[2] }}
+						></div>
+						<div
+							className="absolute w-1/2 h-1/2 bottom-0 left-0 rounded-bl-full"
+							style={{ backgroundColor: sliceColors[3] }}
+						></div>
+					</>
+				)}
+
+				{/* For larger numbers (Security has 8 attributes) */}
+				{attributeCount > 4 &&
 					Array.from({ length: attributeCount }).map((_, index) => {
 						const angleDegrees = 360 / attributeCount
 						const startAngle = index * angleDegrees
-
-						// Get the color based on the attribute's rating
-						const rating = attributeRatings[index]?.rating ?? Rating.UNRATED
-						const sliceColor =
-							RATING_COLORS[rating] || FALLBACK_COLORS[index % FALLBACK_COLORS.length]
-
-						// For 2 slices (like privacy), use a simple 50/50 split
-						if (attributeCount === 2) {
-							return index === 0 ? (
-								<div
-									key={index}
-									className="absolute w-1/2 h-full top-0 left-0"
-									style={{ backgroundColor: sliceColor }}
-								></div>
-							) : (
-								<div
-									key={index}
-									className="absolute w-1/2 h-full top-0 right-0"
-									style={{ backgroundColor: sliceColor }}
-								></div>
-							)
-						}
-
-						// For 4 slices (standard pie chart quadrants)
-						if (attributeCount === 4) {
-							const positions = [
-								'absolute w-1/2 h-1/2 top-0 left-0 rounded-tl-full',
-								'absolute w-1/2 h-1/2 top-0 right-0 rounded-tr-full',
-								'absolute w-1/2 h-1/2 bottom-0 right-0 rounded-br-full',
-								'absolute w-1/2 h-1/2 bottom-0 left-0 rounded-bl-full',
-							]
-
-							return (
-								<div
-									key={index}
-									className={positions[index]}
-									style={{ backgroundColor: sliceColor }}
-								></div>
-							)
-						}
-
-						// For 3 slices, we need to handle this specially
-						if (attributeCount === 3) {
-							const positions = [
-								'absolute w-1/2 h-1/2 top-0 left-0 rounded-tl-full',
-								'absolute w-1/2 h-1/2 top-0 right-0 rounded-tr-full',
-								'absolute w-full h-1/2 bottom-0 left-0',
-							]
-
-							return (
-								<div
-									key={index}
-									className={positions[index]}
-									style={{ backgroundColor: sliceColor }}
-								></div>
-							)
-						}
-
-						// For 8 slices (Security category) or other large numbers, use clip-path
 						return (
 							<div
 								key={index}
@@ -349,21 +363,23 @@ function PizzaSliceChart({
 								style={{
 									width: '100%',
 									height: '100%',
-									backgroundColor: sliceColor,
-									clipPath: `polygon(50% 50%, ${50 + 50 * Math.cos((startAngle * Math.PI) / 180)}% ${50 + 50 * Math.sin((startAngle * Math.PI) / 180)}%, ${50 + 50 * Math.cos(((startAngle + angleDegrees) * Math.PI) / 180)}% ${50 + 50 * Math.sin(((startAngle + angleDegrees) * Math.PI) / 180)}%)`,
+									backgroundColor: sliceColors[index] || '#bdc3c7', // Use the corresponding color or default to gray
+									clipPath: `polygon(50% 50%, ${50 + 50 * Math.cos((startAngle * Math.PI) / 180)}% ${
+										50 + 50 * Math.sin((startAngle * Math.PI) / 180)
+									}%, ${50 + 50 * Math.cos(((startAngle + angleDegrees) * Math.PI) / 180)}% ${
+										50 + 50 * Math.sin(((startAngle + angleDegrees) * Math.PI) / 180)
+									}%)`,
 								}}
 							></div>
 						)
 					})}
 
-				{/* Center overlay for score display */}
+				{/* Display a small center circle for cleaner look */}
 				<div className="absolute inset-0 flex items-center justify-center">
-					<div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-xs font-medium">
-						{Math.round(overallScore * 100)}%
-					</div>
+					<div className="h-4 w-4 rounded-full bg-white"></div>
 				</div>
 			</div>
-			<div className="mt-1 text-sm font-medium">{attrGroup.displayName}</div>
+			<div className="mt-1 text-xs font-medium">{attrGroup.displayName}</div>
 		</div>
 	)
 }
