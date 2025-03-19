@@ -373,11 +373,6 @@ function PizzaSliceChart({
 							></div>
 						)
 					})}
-
-				{/* Display a small center circle for cleaner look */}
-				<div className="absolute inset-0 flex items-center justify-center">
-					<div className="h-4 w-4 rounded-full bg-white"></div>
-				</div>
 			</div>
 			<div className="mt-1 text-xs font-medium">{attrGroup.displayName}</div>
 		</div>
