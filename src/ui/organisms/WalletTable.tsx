@@ -224,58 +224,6 @@ function getAttributeRatings(
 	return attributes
 }
 
-// Device Selector Component
-function DeviceSelector({
-	selectedVariant,
-	onVariantChange,
-}: {
-	selectedVariant: DeviceVariant
-	onVariantChange: (variant: DeviceVariant) => void
-}): React.ReactElement {
-	return (
-		<div className="flex items-center space-x-4 mb-4">
-			<span className="text-sm font-medium">Device:</span>
-			<div className="flex space-x-2">
-				<button
-					className={`p-2 rounded-md flex flex-col items-center ${selectedVariant === DeviceVariant.NONE ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-gray-800'}`}
-					onClick={() => onVariantChange(DeviceVariant.NONE)}
-					title="Show overall ratings"
-				>
-					<span className="text-xl">🌐</span>
-					<span className="text-xs mt-1">Overall</span>
-				</button>
-
-				<button
-					className={`p-2 rounded-md flex flex-col items-center ${selectedVariant === DeviceVariant.WEB ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-gray-800'}`}
-					onClick={() => onVariantChange(DeviceVariant.WEB)}
-					title="Show web/browser ratings"
-				>
-					<span className="text-xl">🖥️</span>
-					<span className="text-xs mt-1">Web</span>
-				</button>
-
-				<button
-					className={`p-2 rounded-md flex flex-col items-center ${selectedVariant === DeviceVariant.MOBILE ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-gray-800'}`}
-					onClick={() => onVariantChange(DeviceVariant.MOBILE)}
-					title="Show mobile ratings"
-				>
-					<span className="text-xl">📱</span>
-					<span className="text-xs mt-1">Mobile</span>
-				</button>
-
-				<button
-					className={`p-2 rounded-md flex flex-col items-center ${selectedVariant === DeviceVariant.DESKTOP ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-gray-800'}`}
-					onClick={() => onVariantChange(DeviceVariant.DESKTOP)}
-					title="Show desktop ratings"
-				>
-					<span className="text-xl">💻</span>
-					<span className="text-xs mt-1">Desktop</span>
-				</button>
-			</div>
-		</div>
-	)
-}
-
 // Pizza Slice Chart Component (inspired by WalletTableStylingExample)
 function PizzaSliceChart({
 	attrGroup,
@@ -528,6 +476,61 @@ export default function WalletTable(): React.ReactElement {
 				)
 			},
 		},
+		// Add Device Support column
+		{
+			header: 'Device Support',
+			accessorFn: (row: any) => {
+				if (row.id.endsWith('-detail')) {
+					return null
+				}
+				return 'device-support'
+			},
+			cell: (info: any) => {
+				if (!info.getValue()) {
+					return null
+				}
+
+				const wallet = info.row.original.wallet
+				const supportsWeb = Boolean(wallet.variants?.browser)
+				const supportsMobile = Boolean(wallet.variants?.mobile)
+				const supportsDesktop = Boolean(wallet.variants?.desktop)
+				const hasVariants = supportsWeb || supportsMobile || supportsDesktop
+
+				return (
+					<div className="flex space-x-3 items-center" style={{ width: '180px' }}>
+						{/* Remove the reset/overall button */}
+						{supportsWeb && (
+							<button
+								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.WEB ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								onClick={() => handleVariantChange(DeviceVariant.WEB)}
+								title="Web/Browser"
+							>
+								<span className="text-xl">🌐</span>
+							</button>
+						)}
+						{supportsMobile && (
+							<button
+								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.MOBILE ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								onClick={() => handleVariantChange(DeviceVariant.MOBILE)}
+								title="Mobile"
+							>
+								<span className="text-xl">📱</span>
+							</button>
+						)}
+						{supportsDesktop && (
+							<button
+								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.DESKTOP ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								onClick={() => handleVariantChange(DeviceVariant.DESKTOP)}
+								title="Desktop"
+							>
+								<span className="text-xl">💻</span>
+							</button>
+						)}
+						{!hasVariants && <span className="text-gray-400 text-sm">No device variants</span>}
+					</div>
+				)
+			},
+		},
 		{
 			header: 'Type',
 			accessorFn: (row: any) => {
@@ -689,9 +692,6 @@ export default function WalletTable(): React.ReactElement {
 
 	return (
 		<div className="overflow-x-auto">
-			{/* Add device selector */}
-			<DeviceSelector selectedVariant={selectedVariant} onVariantChange={handleVariantChange} />
-
 			<table className="min-w-full divide-y divide-gray-200">
 				<thead>
 					{table.getHeaderGroups().map(headerGroup => (
