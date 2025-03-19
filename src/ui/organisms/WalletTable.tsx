@@ -289,75 +289,58 @@ function PizzaSliceChart({
 		}
 	}
 
+	// Create SVG slices for cleaner rendering with gaps
+	const createSlices = () => {
+		const slices = []
+		const centerX = 50
+		const centerY = 50
+		const radius = 45
+		const gapAngle = 2 // Gap in degrees
+
+		const sliceAngle = 360 / attributeCount - gapAngle
+
+		for (let i = 0; i < attributeCount; i++) {
+			const startAngle = i * (sliceAngle + gapAngle)
+			const endAngle = startAngle + sliceAngle
+
+			// Convert angles to radians
+			const startRad = ((startAngle - 90) * Math.PI) / 180
+			const endRad = ((endAngle - 90) * Math.PI) / 180
+
+			// Calculate coordinates
+			const x1 = centerX + radius * Math.cos(startRad)
+			const y1 = centerY + radius * Math.sin(startRad)
+			const x2 = centerX + radius * Math.cos(endRad)
+			const y2 = centerY + radius * Math.sin(endRad)
+
+			// Create path for the slice
+			const largeArcFlag = sliceAngle > 180 ? 1 : 0
+
+			const pathData = `
+				M ${centerX} ${centerY}
+				L ${x1} ${y1}
+				A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}
+				Z
+			`
+
+			slices.push(
+				<path key={i} d={pathData} fill={sliceColors[i]} stroke="#ffffff" strokeWidth="1" />,
+			)
+		}
+
+		return slices
+	}
+
 	// Create the pizza slice visualization with the correct number of slices
 	return (
 		<div className="flex flex-col items-center">
 			<div
-				className="w-10 h-10 rounded-full overflow-hidden relative cursor-help"
+				className="w-10 h-10 rounded-full bg-white overflow-hidden relative cursor-help"
 				title={tooltipText}
 			>
-				{/* Generate different slice patterns based on count */}
-				{attributeCount === 2 && (
-					// For 2 attributes (Privacy category)
-					<div
-						className="absolute inset-0 w-full h-full"
-						style={{
-							backgroundImage: `conic-gradient(
-								${sliceColors[0]} 0deg 180deg, 
-								${sliceColors[1]} 180deg 360deg
-							)`,
-							borderRadius: '50%',
-						}}
-					></div>
-				)}
-
-				{attributeCount === 3 && (
-					// For 3 attributes (Self Sovereignty and Ecosystem categories)
-					<div
-						className="absolute inset-0 w-full h-full"
-						style={{
-							backgroundImage: `conic-gradient(
-								${sliceColors[0]} 0deg 120deg, 
-								${sliceColors[1]} 120deg 240deg,
-								${sliceColors[2]} 240deg 360deg
-							)`,
-							borderRadius: '50%',
-						}}
-					></div>
-				)}
-
-				{attributeCount === 4 && (
-					// For 4 attributes (Transparency category)
-					<div
-						className="absolute inset-0 w-full h-full"
-						style={{
-							backgroundImage: `conic-gradient(
-								${sliceColors[0]} 0deg 90deg, 
-								${sliceColors[1]} 90deg 180deg,
-								${sliceColors[2]} 180deg 270deg,
-								${sliceColors[3]} 270deg 360deg
-							)`,
-							borderRadius: '50%',
-						}}
-					></div>
-				)}
-
-				{/* For larger numbers (Security has 8 attributes) */}
-				{attributeCount > 4 && (
-					<div
-						className="absolute inset-0 w-full h-full"
-						style={{
-							backgroundImage: `conic-gradient(${sliceColors
-								.map((color, index) => {
-									const startAngle = (index * 360) / attributeCount
-									const endAngle = ((index + 1) * 360) / attributeCount
-									return `${color} ${startAngle}deg ${endAngle}deg${index < attributeCount - 1 ? ',' : ''}`
-								})
-								.join(' ')})`,
-							borderRadius: '50%',
-						}}
-					></div>
-				)}
+				<svg viewBox="0 0 100 100" className="w-full h-full">
+					{createSlices()}
+				</svg>
 			</div>
 			<div className="mt-1 text-xs font-medium">{attrGroup.displayName}</div>
 		</div>
