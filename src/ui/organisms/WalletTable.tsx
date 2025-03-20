@@ -15,6 +15,7 @@ import { Rating, type AttributeGroup } from '@/schema/attributes'
 import type { EvaluationTree } from '@/schema/attribute-groups'
 import { RatingDetailModal } from '../molecules/RatingDetailModal'
 import { HardwareWalletManufactureType } from '@/schema/features/profile'
+import { WebIcon, MobileIcon, DesktopIcon } from '@/icons'
 
 // Define wallet type constants from the previous implementation
 const WalletTypeCategory = {
@@ -533,44 +534,85 @@ export default function WalletTable(): React.ReactElement {
 					return null
 				}
 
-				const { supportsWeb, supportsMobile, supportsDesktop, hasVariants } = value
+				const { supportsWeb, supportsMobile, supportsDesktop } = value
 
 				return (
-					<div className="flex space-x-3 items-center">
-						{supportsWeb && (
+					<div className="flex space-x-0 items-center">
+						<div className="flex flex-col items-center">
 							<button
-								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.WEB ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								className={`p-2 rounded-md ${
+									!supportsWeb
+										? 'opacity-40 cursor-not-allowed text-gray-400'
+										: selectedVariant === DeviceVariant.WEB
+											? 'text-purple-700'
+											: 'text-gray-600 hover:text-gray-900'
+								}`}
 								onClick={() => {
-									handleVariantChange(DeviceVariant.WEB)
+									if (supportsWeb) {
+										handleVariantChange(DeviceVariant.WEB)
+									}
 								}}
-								title="Web/Browser"
+								title={supportsWeb ? 'Web/Browser' : 'Web/Browser (Not Supported)'}
+								disabled={!supportsWeb}
 							>
-								<span className="text-xl">🌐</span>
+								<WebIcon />
 							</button>
-						)}
-						{supportsMobile && (
+							<div
+								className={`w-2 h-2 rounded-full mt-1 ${
+									selectedVariant === DeviceVariant.WEB ? 'bg-purple-700' : 'bg-gray-300'
+								}`}
+							/>
+						</div>
+						<div className="flex flex-col items-center">
 							<button
-								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.MOBILE ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								className={`p-2 rounded-md ${
+									!supportsMobile
+										? 'opacity-40 cursor-not-allowed text-gray-400'
+										: selectedVariant === DeviceVariant.MOBILE
+											? 'text-purple-700'
+											: 'text-gray-600 hover:text-gray-900'
+								}`}
 								onClick={() => {
-									handleVariantChange(DeviceVariant.MOBILE)
+									if (supportsMobile) {
+										handleVariantChange(DeviceVariant.MOBILE)
+									}
 								}}
-								title="Mobile"
+								title={supportsMobile ? 'Mobile' : 'Mobile (Not Supported)'}
+								disabled={!supportsMobile}
 							>
-								<span className="text-xl">📱</span>
+								<MobileIcon />
 							</button>
-						)}
-						{supportsDesktop && (
+							<div
+								className={`w-2 h-2 rounded-full mt-1 ${
+									selectedVariant === DeviceVariant.MOBILE ? 'bg-purple-700' : 'bg-gray-300'
+								}`}
+							/>
+						</div>
+						<div className="flex flex-col items-center">
 							<button
-								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.DESKTOP ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								className={`p-2 rounded-md ${
+									!supportsDesktop
+										? 'opacity-40 cursor-not-allowed text-gray-400'
+										: selectedVariant === DeviceVariant.DESKTOP
+											? 'text-purple-700'
+											: 'text-gray-600 hover:text-gray-900'
+								}`}
 								onClick={() => {
-									handleVariantChange(DeviceVariant.DESKTOP)
+									if (supportsDesktop) {
+										handleVariantChange(DeviceVariant.DESKTOP)
+									}
 								}}
-								title="Desktop"
+								title={supportsDesktop ? 'Desktop' : 'Desktop (Not Supported)'}
+								disabled={!supportsDesktop}
 							>
-								<span className="text-xl">💻</span>
+								<DesktopIcon />
 							</button>
-						)}
-						{!hasVariants && <span className="text-gray-400 text-sm">No device variants</span>}
+							<div
+								className={`w-2 h-2 rounded-full mt-1 ${
+									selectedVariant === DeviceVariant.DESKTOP ? 'bg-purple-700' : 'bg-gray-300'
+								}`}
+							/>
+						</div>
 					</div>
 				)
 			},
@@ -752,44 +794,85 @@ export default function WalletTable(): React.ReactElement {
 					return null
 				}
 
-				const { supportsWeb, supportsMobile, supportsDesktop, hasVariants } = value
+				const { supportsWeb, supportsMobile, supportsDesktop } = value
 
 				return (
-					<div className="flex space-x-3 items-center" style={{ width: '180px' }}>
-						{supportsWeb && (
+					<div className="flex space-x-6 items-center">
+						<div className="flex flex-col items-center">
 							<button
-								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.WEB ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								className={`p-2 rounded-md ${
+									!supportsWeb
+										? 'opacity-40 cursor-not-allowed text-gray-400'
+										: selectedVariant === DeviceVariant.WEB
+											? 'text-purple-700'
+											: 'text-gray-600 hover:text-gray-900'
+								}`}
 								onClick={() => {
-									handleVariantChange(DeviceVariant.WEB)
+									if (supportsWeb) {
+										handleVariantChange(DeviceVariant.WEB)
+									}
 								}}
-								title="Web/Browser"
+								title={supportsWeb ? 'Web/Browser' : 'Web/Browser (Not Supported)'}
+								disabled={!supportsWeb}
 							>
-								<span className="text-xl">🌐</span>
+								<WebIcon />
 							</button>
-						)}
-						{supportsMobile && (
+							<div
+								className={`w-2 h-2 rounded-full mt-1 ${
+									selectedVariant === DeviceVariant.WEB ? 'bg-purple-700' : 'bg-gray-300'
+								}`}
+							/>
+						</div>
+						<div className="flex flex-col items-center">
 							<button
-								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.MOBILE ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								className={`p-2 rounded-md ${
+									!supportsMobile
+										? 'opacity-40 cursor-not-allowed text-gray-400'
+										: selectedVariant === DeviceVariant.MOBILE
+											? 'text-purple-700'
+											: 'text-gray-600 hover:text-gray-900'
+								}`}
 								onClick={() => {
-									handleVariantChange(DeviceVariant.MOBILE)
+									if (supportsMobile) {
+										handleVariantChange(DeviceVariant.MOBILE)
+									}
 								}}
-								title="Mobile"
+								title={supportsMobile ? 'Mobile' : 'Mobile (Not Supported)'}
+								disabled={!supportsMobile}
 							>
-								<span className="text-xl">📱</span>
+								<MobileIcon />
 							</button>
-						)}
-						{supportsDesktop && (
+							<div
+								className={`w-2 h-2 rounded-full mt-1 ${
+									selectedVariant === DeviceVariant.MOBILE ? 'bg-purple-700' : 'bg-gray-300'
+								}`}
+							/>
+						</div>
+						<div className="flex flex-col items-center">
 							<button
-								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.DESKTOP ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								className={`p-2 rounded-md ${
+									!supportsDesktop
+										? 'opacity-40 cursor-not-allowed text-gray-400'
+										: selectedVariant === DeviceVariant.DESKTOP
+											? 'text-purple-700'
+											: 'text-gray-600 hover:text-gray-900'
+								}`}
 								onClick={() => {
-									handleVariantChange(DeviceVariant.DESKTOP)
+									if (supportsDesktop) {
+										handleVariantChange(DeviceVariant.DESKTOP)
+									}
 								}}
-								title="Desktop"
+								title={supportsDesktop ? 'Desktop' : 'Desktop (Not Supported)'}
+								disabled={!supportsDesktop}
 							>
-								<span className="text-xl">💻</span>
+								<DesktopIcon />
 							</button>
-						)}
-						{!hasVariants && <span className="text-gray-400 text-sm">No device variants</span>}
+							<div
+								className={`w-2 h-2 rounded-full mt-1 ${
+									selectedVariant === DeviceVariant.DESKTOP ? 'bg-purple-700' : 'bg-gray-300'
+								}`}
+							/>
+						</div>
 					</div>
 				)
 			},
