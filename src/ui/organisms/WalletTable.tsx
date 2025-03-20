@@ -447,6 +447,9 @@ function createWalletNameCell(isHardware: boolean) {
 			? '/images/hardware-wallets/default.svg'
 			: '/images/wallets/default.svg'
 
+		// Create the wallet detail URL
+		const walletUrl = `/${walletId}`
+
 		return (
 			<div className="flex items-center">
 				{/* Wallet Logo */}
@@ -462,7 +465,12 @@ function createWalletNameCell(isHardware: boolean) {
 					/>
 				</div>
 				{/* Wallet Name */}
-				<span style={{ fontSize: '23px', fontWeight: 500 }}>{getValue()}</span>
+				<a
+					href={walletUrl}
+					className="text-[23px] font-medium hover:text-blue-600 hover:underline cursor-pointer"
+				>
+					{getValue()}
+				</a>
 			</div>
 		)
 	}
