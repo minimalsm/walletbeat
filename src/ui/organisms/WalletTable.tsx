@@ -14,8 +14,9 @@ import {
 	transparencyAttributeGroup,
 	ecosystemAttributeGroup,
 } from '@/schema/attribute-groups'
-import type { AttributeGroup } from '@/schema/attributes'
+import { Rating, type AttributeGroup } from '@/schema/attributes'
 import type { EvaluationTree } from '@/schema/attribute-groups'
+import { RatingDetailModal } from '../molecules/RatingDetailModal'
 
 // Define wallet type constants from the previous implementation
 const WalletTypeCategory = {
@@ -55,17 +56,6 @@ const SMART_WALLET_STANDARD_DISPLAY: Record<SmartWalletStandard, string> = {
 	[SmartWalletStandard.ERC_7702]: 'ERC-7702',
 	[SmartWalletStandard.OTHER]: 'Other',
 }
-
-// Rating definitions - these should match the actual enum in the original codebase
-const Rating = {
-	PASS: 'PASS', // Good - Green
-	PARTIAL: 'PARTIAL', // Neutral - Yellow/Orange
-	FAIL: 'FAIL', // Bad - Red
-	UNRATED: 'UNRATED', // Gray
-	EXEMPT: 'EXEMPT', // Light Gray
-} as const
-
-type Rating = (typeof Rating)[keyof typeof Rating]
 
 // Helper functions for wallet data
 interface WalletInfo {
@@ -234,6 +224,9 @@ function PizzaSliceChart({
 	evalTree: EvaluationTree
 	isSupported?: boolean
 }): React.ReactElement {
+	// Add state for the modal
+	const [modalOpen, setModalOpen] = useState(false)
+
 	// Get attribute ratings and calculate overall score
 	const attributeRatings = getAttributeRatings(attrGroup, evalTree)
 	const attributeCount = attributeRatings.length > 0 ? attributeRatings.length : 4 // Default to 4 if no attributes
@@ -342,19 +335,42 @@ function PizzaSliceChart({
 		return slices
 	}
 
+	// Handle click on the pie chart
+	const handlePieClick = () => {
+		if (isSupported) {
+			setModalOpen(true)
+		}
+	}
+
 	// Create the pizza slice visualization with the correct number of slices
 	return (
-		<div className={`flex flex-col items-center ${!isSupported ? 'opacity-40' : ''}`}>
-			<div
-				className="w-10 h-10 rounded-full bg-white overflow-hidden relative cursor-help"
-				title={tooltipText}
-			>
-				<svg viewBox="0 0 100 100" className="w-full h-full">
-					{createSlices()}
-				</svg>
+		<>
+			<div className={`flex flex-col items-center ${!isSupported ? 'opacity-40' : ''}`}>
+				<div
+					className={`w-10 h-10 rounded-full bg-white overflow-hidden relative ${isSupported ? 'cursor-pointer hover:shadow-md' : 'cursor-help'}`}
+					title={tooltipText}
+					onClick={handlePieClick}
+				>
+					<svg viewBox="0 0 100 100" className="w-full h-full">
+						{createSlices()}
+					</svg>
+				</div>
+				<div className="mt-1 text-xs font-medium">{attrGroup.displayName}</div>
 			</div>
-			<div className="mt-1 text-xs font-medium">{attrGroup.displayName}</div>
-		</div>
+
+			{/* Rating Detail Modal */}
+			{isSupported && (
+				<RatingDetailModal
+					open={modalOpen}
+					onClose={() => {
+						setModalOpen(false)
+					}}
+					attrGroup={attrGroup}
+					evalTree={evalTree}
+					attributeRatings={attributeRatings}
+				/>
+			)}
+		</>
 	)
 }
 
