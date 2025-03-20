@@ -379,17 +379,26 @@ export function Navigation({
 			<div
 				key="navigationBox"
 				className={`
-						/* Desktop styles */
-				    lg:sticky lg:top-0 lg:h-screen lg:flex lg:flex-0
-
 				    /* Base styles */
-				    fixed lg:relative h-full w-full lg:w-auto max-w-xs bg-[var(--navigation-bg)] z-40
+				    fixed lg:relative h-full z-40
 				    flex flex-col gap-0 overflow-y-auto
-										    
+				    
+				    /* Full width on mobile, constrained on desktop */
+				    w-full lg:w-auto lg:max-w-xs
+				    
+				    /* Positioning */
+				    inset-0 lg:inset-auto
+				    
+				    /* Desktop styles - always visible and positioned */
+				    lg:sticky lg:top-0 lg:h-screen lg:flex lg:flex-0
+				    
 				    /* Mobile styles - controlled by state */
 				    lg:translate-x-0
 				    transition-transform duration-300
 				    ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+				    
+				    /* Background color */
+				    bg-[var(--navigation-bg)]
 				`}
 			>
 				{/* Logo area */}
@@ -411,7 +420,7 @@ export function Navigation({
 					</div>
 				</div>
 
-				{/* Desktop Search Component - ensures the search is always visible on desktop */}
+				{/* Search/prefix component */}
 				{typeof prefix !== 'undefined' && prefix !== null ? (
 					<div className="px-4 mb-2 w-full">{prefix}</div>
 				) : null}
@@ -423,8 +432,8 @@ export function Navigation({
 				</div>
 			</div>
 
-			{/* Overlay when mobile menu is open */}
-			{isOpen && isMobile && (
+			{/* Overlay for mobile menu - only visible when menu is open on mobile */}
+			{isOpen && (
 				<div
 					className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
 					onClick={toggleMenu}
