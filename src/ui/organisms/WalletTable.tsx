@@ -1004,7 +1004,11 @@ export default function WalletTable(): React.ReactElement {
 						}}
 					>
 						Software wallets
-						<span className="ml-2 px-2 py-0.5 text-xs text-white font-medium bg-purple-500 rounded-full">
+						<span
+							className={`ml-2 px-2 py-0.5 text-xs text-white font-medium rounded-full ${
+								activeTab === WalletTableTab.SOFTWARE ? 'bg-purple-500' : 'bg-[#3B0E45]'
+							}`}
+						>
 							{softwareWalletData.length}
 						</span>
 					</button>
@@ -1019,7 +1023,11 @@ export default function WalletTable(): React.ReactElement {
 						}}
 					>
 						Hardware wallets
-						<span className="ml-2 px-2 py-0.5 text-xs text-white font-medium bg-purple-500 rounded-full">
+						<span
+							className={`ml-2 px-2 py-0.5 text-xs text-white font-medium rounded-full ${
+								activeTab === WalletTableTab.HARDWARE ? 'bg-purple-500' : 'bg-[#3B0E45]'
+							}`}
+						>
 							{hardwareWalletData.length}
 						</span>
 					</button>
