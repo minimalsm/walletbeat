@@ -132,7 +132,10 @@ export function RatingDetailModal({
 					style={{
 						opacity: highlightedSlice === null || highlightedSlice === i ? 1 : 0.4,
 						transition: 'opacity 0.2s ease-in-out',
+						cursor: 'pointer',
 					}}
+					onMouseEnter={() => handleMouseEnter(i)}
+					onMouseLeave={handleMouseLeave}
 				/>,
 			)
 		}
@@ -220,9 +223,7 @@ export function RatingDetailModal({
 											transition: 'background-color 0.2s ease',
 											cursor: 'pointer',
 										}}
-										onMouseEnter={() => {
-											handleMouseEnter(index)
-										}}
+										onMouseEnter={() => handleMouseEnter(index)}
 										onMouseLeave={handleMouseLeave}
 									>
 										<Box
