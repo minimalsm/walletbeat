@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/strict-boolean-expressions - Disabled for integration with tanstack table */
-import React, { useState } from 'react'
+import * as React from 'react'
+import { useState } from 'react'
 import {
 	useReactTable,
 	getCoreRowModel,
@@ -7,6 +8,7 @@ import {
 	getExpandedRowModel,
 } from '@tanstack/react-table'
 import { ratedWallets } from '@/data/wallets'
+import { ratedHardwareWallets } from '@/data/hardware-wallets'
 import {
 	securityAttributeGroup,
 	privacyAttributeGroup,
@@ -17,6 +19,7 @@ import {
 import { Rating, type AttributeGroup } from '@/schema/attributes'
 import type { EvaluationTree } from '@/schema/attribute-groups'
 import { RatingDetailModal } from '../molecules/RatingDetailModal'
+import { HardwareWalletManufactureType } from '@/schema/features/profile'
 
 // Define wallet type constants from the previous implementation
 const WalletTypeCategory = {
@@ -33,8 +36,14 @@ const DeviceVariant = {
 	DESKTOP: 'desktop',
 } as const
 
-type DeviceVariant = (typeof DeviceVariant)[keyof typeof DeviceVariant]
+// Define tab types for the wallet table
+const WalletTableTab = {
+	SOFTWARE: 'software',
+	HARDWARE: 'hardware',
+} as const
 
+type WalletTableTab = (typeof WalletTableTab)[keyof typeof WalletTableTab]
+type DeviceVariant = (typeof DeviceVariant)[keyof typeof DeviceVariant]
 type WalletTypeCategory = (typeof WalletTypeCategory)[keyof typeof WalletTypeCategory]
 
 const SmartWalletStandard = {
@@ -57,6 +66,12 @@ const SMART_WALLET_STANDARD_DISPLAY: Record<SmartWalletStandard, string> = {
 	[SmartWalletStandard.OTHER]: 'Other',
 }
 
+// Hardware wallet manufacture type display strings
+const HARDWARE_WALLET_MANUFACTURE_TYPE_DISPLAY: Record<HardwareWalletManufactureType, string> = {
+	[HardwareWalletManufactureType.FACTORY_MADE]: 'Factory-Made',
+	[HardwareWalletManufactureType.DIY]: 'DIY',
+}
+
 // Helper functions for wallet data
 interface WalletInfo {
 	categories: WalletTypeCategory[]
@@ -77,6 +92,7 @@ interface WalletMetadataLike {
 		categories?: WalletTypeCategory[]
 		smartWalletStandards?: SmartWalletStandard[]
 	}
+	hardwareWalletManufactureType?: HardwareWalletManufactureType
 	// Add properties for variants
 	variants?: Record<string, any>
 }
@@ -141,6 +157,15 @@ function getDetailedWalletDescription(wallet: WalletLike): string {
 	}
 
 	return typeDescriptions.join(' + ')
+}
+
+// Helper function to get hardware wallet manufacture type display name
+function getHardwareWalletManufactureTypeDisplay(wallet: WalletLike): string {
+	const manufactureType = wallet.metadata.hardwareWalletManufactureType
+	if (manufactureType !== undefined && manufactureType !== null) {
+		return HARDWARE_WALLET_MANUFACTURE_TYPE_DISPLAY[manufactureType] || 'Unknown'
+	}
+	return 'Unknown'
 }
 
 // Helper function to check if wallet supports a specific device variant
@@ -363,16 +388,26 @@ interface TableRow {
 	subRows: TableRow[]
 }
 
-// Create table data
-const defaultData: TableRow[] = Object.values(ratedWallets).map(wallet => {
+// Create software wallet table data
+const softwareWalletData: TableRow[] = Object.values(ratedWallets).map(wallet => {
 	const detailedType = getDetailedWalletDescription(wallet as WalletLike)
 	const { standards } = getWalletTypeInfo(wallet as WalletLike)
 
 	// Format wallet standards for display
 	const standardsDisplay =
 		standards.length > 0
-			? standards.map(std => SMART_WALLET_STANDARD_DISPLAY[std] ?? std).join(', ')
+			? standards
+					.map(std => {
+						const display = SMART_WALLET_STANDARD_DISPLAY[std]
+						return display !== undefined ? display : std
+					})
+					.join(', ')
 			: 'None'
+
+	const websiteUrl =
+		typeof wallet.metadata.url === 'string' && wallet.metadata.url !== ''
+			? wallet.metadata.url
+			: 'Not available'
 
 	return {
 		id: wallet.metadata.id,
@@ -387,7 +422,7 @@ const defaultData: TableRow[] = Object.values(ratedWallets).map(wallet => {
 				// Additional metadata for detail display
 				typeDescription: detailedType,
 				standards: standardsDisplay,
-				websiteUrl: wallet.metadata.url || 'Not available',
+				websiteUrl,
 				// Empty subRows for detail rows (they can't be expanded further)
 				subRows: [],
 			} as TableRow & {
@@ -399,18 +434,58 @@ const defaultData: TableRow[] = Object.values(ratedWallets).map(wallet => {
 	}
 })
 
+// Create hardware wallet table data
+const hardwareWalletData: TableRow[] = Object.values(ratedHardwareWallets).map(wallet => {
+	const walletLike = wallet as WalletLike
+	const manufactureType = getHardwareWalletManufactureTypeDisplay(walletLike)
+	const websiteUrl =
+		typeof walletLike.metadata.url === 'string' && walletLike.metadata.url !== ''
+			? walletLike.metadata.url
+			: 'Not available'
+
+	return {
+		id: walletLike.metadata.id,
+		name: walletLike.metadata.displayName,
+		wallet: walletLike,
+		// Each wallet row has a subRow for details
+		subRows: [
+			{
+				id: walletLike.metadata.id + '-detail',
+				name: 'Details',
+				wallet: walletLike,
+				// Additional metadata for detail display
+				manufactureType,
+				websiteUrl,
+				// Empty subRows for detail rows (they can't be expanded further)
+				subRows: [],
+			} as TableRow & {
+				manufactureType: string
+				websiteUrl: string
+			},
+		],
+	}
+})
+
 export default function WalletTable(): React.ReactElement {
-	// Add state for selected device variant
+	// Add state for selected device variant and active tab
 	const [selectedVariant, setSelectedVariant] = useState<DeviceVariant>(DeviceVariant.NONE)
-	const [data] = React.useState(() => [...defaultData])
+	const [activeTab, setActiveTab] = useState<WalletTableTab>(WalletTableTab.SOFTWARE)
+
+	// Use the appropriate data based on active tab
+	const tableData = activeTab === WalletTableTab.SOFTWARE ? softwareWalletData : hardwareWalletData
 
 	// Handler for device variant change
 	const handleVariantChange = (variant: DeviceVariant) => {
 		setSelectedVariant(variant === selectedVariant ? DeviceVariant.NONE : variant)
 	}
 
-	// Define columns inside the component to access the selectedVariant state
-	const columns = [
+	// Handler for tab change
+	const handleTabChange = (tab: WalletTableTab) => {
+		setActiveTab(tab)
+	}
+
+	// Define columns for software wallets
+	const softwareColumns = [
 		{
 			header: 'Wallet',
 			accessorKey: 'name',
@@ -507,7 +582,6 @@ export default function WalletTable(): React.ReactElement {
 
 				return (
 					<div className="flex space-x-3 items-center" style={{ width: '180px' }}>
-						{/* Remove the reset/overall button */}
 						{supportsWeb && (
 							<button
 								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.WEB ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
@@ -678,9 +752,283 @@ export default function WalletTable(): React.ReactElement {
 		},
 	]
 
+	// Define columns for hardware wallets
+	const hardwareColumns = [
+		{
+			header: 'Wallet',
+			accessorKey: 'name',
+			cell: ({ row, getValue }: { row: any; getValue: () => any }) => {
+				// Check if this is a detail row
+				const isDetailRow = row.original.id.endsWith('-detail')
+
+				if (isDetailRow) {
+					// Render detailed metadata for hardware wallet detail rows
+					const metadata = row.original
+					return (
+						<div className="p-3 bg-gray-50 rounded">
+							<div className="grid grid-cols-2 gap-2">
+								<div className="font-semibold">Manufacture Type:</div>
+								<div>{metadata.manufactureType}</div>
+
+								<div className="font-semibold">Website:</div>
+								<div>
+									{metadata.websiteUrl !== 'Not available' ? (
+										<a
+											href={metadata.websiteUrl}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="text-blue-600 hover:underline"
+										>
+											{metadata.websiteUrl}
+										</a>
+									) : (
+										'Not available'
+									)}
+								</div>
+							</div>
+						</div>
+					)
+				}
+
+				// Regular row rendering with expand/collapse button
+				return (
+					<div style={{ paddingLeft: row.depth * 20 }}>
+						{row.getCanExpand() ? (
+							<button
+								onClick={row.getToggleExpandedHandler()}
+								style={{
+									background: 'none',
+									border: 'none',
+									cursor: 'pointer',
+									padding: '0 4px',
+								}}
+							>
+								{row.getIsExpanded() ? '▼' : '▶'}
+							</button>
+						) : (
+							<span style={{ display: 'inline-block', width: 18 }} />
+						)}{' '}
+						{getValue()}
+					</div>
+				)
+			},
+		},
+		{
+			header: 'Manufacture Type',
+			accessorFn: (row: any) => {
+				if (row.id.endsWith('-detail')) {
+					return null
+				}
+
+				const wallet = row.wallet
+				return getHardwareWalletManufactureTypeDisplay(wallet)
+			},
+			cell: (info: any) => info.getValue(),
+		},
+		// Add Device Support column for hardware wallets too
+		{
+			header: 'Device Support',
+			accessorFn: (row: any) => {
+				if (row.id.endsWith('-detail')) {
+					return null
+				}
+				return 'device-support'
+			},
+			cell: (info: any) => {
+				if (!info.getValue()) {
+					return null
+				}
+
+				const wallet = info.row.original.wallet
+				const supportsWeb = Boolean(wallet.variants?.browser)
+				const supportsMobile = Boolean(wallet.variants?.mobile)
+				const supportsDesktop = Boolean(wallet.variants?.desktop)
+				const hasVariants = supportsWeb || supportsMobile || supportsDesktop
+
+				return (
+					<div className="flex space-x-3 items-center" style={{ width: '180px' }}>
+						{supportsWeb && (
+							<button
+								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.WEB ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								onClick={() => {
+									handleVariantChange(DeviceVariant.WEB)
+								}}
+								title="Web/Browser"
+							>
+								<span className="text-xl">🌐</span>
+							</button>
+						)}
+						{supportsMobile && (
+							<button
+								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.MOBILE ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								onClick={() => {
+									handleVariantChange(DeviceVariant.MOBILE)
+								}}
+								title="Mobile"
+							>
+								<span className="text-xl">📱</span>
+							</button>
+						)}
+						{supportsDesktop && (
+							<button
+								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.DESKTOP ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
+								onClick={() => {
+									handleVariantChange(DeviceVariant.DESKTOP)
+								}}
+								title="Desktop"
+							>
+								<span className="text-xl">💻</span>
+							</button>
+						)}
+						{!hasVariants && <span className="text-gray-400 text-sm">No device variants</span>}
+					</div>
+				)
+			},
+		},
+		// Add the five category columns with device variant support for hardware wallets
+		{
+			header: 'Security',
+			accessorFn: (row: any) => {
+				if (row.id.endsWith('-detail')) {
+					return null
+				}
+				return 'security'
+			},
+			cell: (info: any) => {
+				if (!info.getValue()) {
+					return null
+				}
+
+				const wallet = info.row.original.wallet
+				const isSupported =
+					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
+				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return (
+					<PizzaSliceChart
+						attrGroup={securityAttributeGroup}
+						evalTree={evalTree}
+						isSupported={isSupported}
+					/>
+				)
+			},
+		},
+		{
+			header: 'Privacy',
+			accessorFn: (row: any) => {
+				if (row.id.endsWith('-detail')) {
+					return null
+				}
+				return 'privacy'
+			},
+			cell: (info: any) => {
+				if (!info.getValue()) {
+					return null
+				}
+
+				const wallet = info.row.original.wallet
+				const isSupported =
+					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
+				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return (
+					<PizzaSliceChart
+						attrGroup={privacyAttributeGroup}
+						evalTree={evalTree}
+						isSupported={isSupported}
+					/>
+				)
+			},
+		},
+		{
+			header: 'Self Sovereignty',
+			accessorFn: (row: any) => {
+				if (row.id.endsWith('-detail')) {
+					return null
+				}
+				return 'selfSovereignty'
+			},
+			cell: (info: any) => {
+				if (!info.getValue()) {
+					return null
+				}
+
+				const wallet = info.row.original.wallet
+				const isSupported =
+					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
+				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return (
+					<PizzaSliceChart
+						attrGroup={selfSovereigntyAttributeGroup}
+						evalTree={evalTree}
+						isSupported={isSupported}
+					/>
+				)
+			},
+		},
+		{
+			header: 'Transparency',
+			accessorFn: (row: any) => {
+				if (row.id.endsWith('-detail')) {
+					return null
+				}
+				return 'transparency'
+			},
+			cell: (info: any) => {
+				if (!info.getValue()) {
+					return null
+				}
+
+				const wallet = info.row.original.wallet
+				const isSupported =
+					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
+				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return (
+					<PizzaSliceChart
+						attrGroup={transparencyAttributeGroup}
+						evalTree={evalTree}
+						isSupported={isSupported}
+					/>
+				)
+			},
+		},
+		{
+			header: 'Ecosystem',
+			accessorFn: (row: any) => {
+				if (row.id.endsWith('-detail')) {
+					return null
+				}
+				return 'ecosystem'
+			},
+			cell: (info: any) => {
+				if (!info.getValue()) {
+					return null
+				}
+
+				const wallet = info.row.original.wallet
+				const isSupported =
+					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
+				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return (
+					<PizzaSliceChart
+						attrGroup={ecosystemAttributeGroup}
+						evalTree={evalTree}
+						isSupported={isSupported}
+					/>
+				)
+			},
+		},
+	]
+
+	// Use the appropriate columns based on active tab
+	const columns = activeTab === WalletTableTab.SOFTWARE ? softwareColumns : hardwareColumns
+
 	// Create table
 	const table = useReactTable({
-		data,
+		data: tableData,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getExpandedRowModel: getExpandedRowModel(),
@@ -689,6 +1037,31 @@ export default function WalletTable(): React.ReactElement {
 
 	return (
 		<div className="overflow-x-auto">
+			{/* Tabs */}
+			<div className="flex border-b mb-4">
+				<button
+					className={`px-4 py-2 font-medium text-sm focus:outline-none ${
+						activeTab === WalletTableTab.SOFTWARE
+							? 'border-b-2 border-blue-500 text-blue-600'
+							: 'text-gray-500 hover:text-gray-700'
+					}`}
+					onClick={() => handleTabChange(WalletTableTab.SOFTWARE)}
+				>
+					Software Wallets
+				</button>
+				<button
+					className={`px-4 py-2 font-medium text-sm focus:outline-none ${
+						activeTab === WalletTableTab.HARDWARE
+							? 'border-b-2 border-blue-500 text-blue-600'
+							: 'text-gray-500 hover:text-gray-700'
+					}`}
+					onClick={() => handleTabChange(WalletTableTab.HARDWARE)}
+				>
+					Hardware Wallets
+				</button>
+			</div>
+
+			{/* Table */}
 			<table className="min-w-full divide-y divide-gray-200">
 				<thead>
 					{table.getHeaderGroups().map(headerGroup => (
@@ -708,11 +1081,13 @@ export default function WalletTable(): React.ReactElement {
 							// Skip rendering detail rows for unsupported wallets
 							const isDetailRow = row.original.id.endsWith('-detail')
 							const parentWallet = isDetailRow
-								? data.find(w => w.id === row.original.id.replace('-detail', ''))?.wallet
+								? tableData.find(w => w.id === row.original.id.replace('-detail', ''))?.wallet
 								: row.original.wallet
 
+							// For software wallets, check variant support
 							const isSupported =
 								!parentWallet ||
+								activeTab === WalletTableTab.HARDWARE ||
 								selectedVariant === DeviceVariant.NONE ||
 								walletSupportsVariant(parentWallet, selectedVariant)
 
