@@ -466,6 +466,120 @@ const hardwareWalletData: TableRow[] = Object.values(ratedHardwareWallets).map(w
 	}
 })
 
+// Add this function before the softwareColumns and hardwareColumns definitions
+// Create a reusable cell renderer for wallet name columns
+function createWalletNameCell(isHardware: boolean) {
+	return ({ row, getValue }: { row: any; getValue: () => any }) => {
+		// Check if this is a detail row
+		const isDetailRow = row.original.id.endsWith('-detail')
+
+		if (isDetailRow) {
+			// Render detailed metadata for detail rows
+			const metadata = row.original
+
+			// Different detail content based on wallet type
+			if (isHardware) {
+				return (
+					<div className="p-3 bg-gray-50 rounded">
+						<div className="grid grid-cols-2 gap-2">
+							<div className="font-semibold">Manufacture Type:</div>
+							<div>{metadata.manufactureType}</div>
+
+							<div className="font-semibold">Website:</div>
+							<div>
+								{metadata.websiteUrl !== 'Not available' ? (
+									<a
+										href={metadata.websiteUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-blue-600 hover:underline"
+									>
+										{metadata.websiteUrl}
+									</a>
+								) : (
+									'Not available'
+								)}
+							</div>
+						</div>
+					</div>
+				)
+			} else {
+				// Software wallet details
+				return (
+					<div className="p-3 bg-gray-50 rounded">
+						<div className="grid grid-cols-2 gap-2">
+							<div className="font-semibold">Type:</div>
+							<div>{metadata.typeDescription}</div>
+
+							<div className="font-semibold">Standards:</div>
+							<div>{metadata.standards}</div>
+
+							<div className="font-semibold">Website:</div>
+							<div>
+								{metadata.websiteUrl !== 'Not available' ? (
+									<a
+										href={metadata.websiteUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-blue-600 hover:underline"
+									>
+										{metadata.websiteUrl}
+									</a>
+								) : (
+									'Not available'
+								)}
+							</div>
+						</div>
+					</div>
+				)
+			}
+		}
+
+		// Regular row rendering with expand/collapse button and logo
+		const walletId = row.original.wallet.metadata.id
+		const logoPath = isHardware
+			? `/images/hardware-wallets/${walletId}.svg`
+			: `/images/wallets/${walletId}.svg`
+		const defaultLogo = isHardware
+			? '/images/hardware-wallets/default.svg'
+			: '/images/wallets/default.svg'
+
+		return (
+			<div style={{ paddingLeft: row.depth * 20 }} className="flex items-center">
+				{row.getCanExpand() ? (
+					<button
+						onClick={row.getToggleExpandedHandler()}
+						style={{
+							background: 'none',
+							border: 'none',
+							cursor: 'pointer',
+							padding: '0 4px',
+						}}
+					>
+						{row.getIsExpanded() ? '▼' : '▶'}
+					</button>
+				) : (
+					<span style={{ display: 'inline-block', width: 18 }} />
+				)}{' '}
+				{/* Wallet Logo */}
+				<div className="flex-shrink-0 mr-3">
+					<img
+						src={logoPath}
+						alt=""
+						className="w-6 h-6 object-contain"
+						onError={e => {
+							// Fallback for missing logos
+							e.currentTarget.src = defaultLogo
+						}}
+					/>
+				</div>
+				{/* Wallet Name */}
+				<span style={{ fontSize: '23px', fontWeight: 500 }}>{getValue()}</span>
+			</div>
+		)
+	}
+}
+
 export default function WalletTable(): React.ReactElement {
 	// Add state for selected device variant and active tab
 	const [selectedVariant, setSelectedVariant] = useState<DeviceVariant>(DeviceVariant.NONE)
@@ -489,64 +603,7 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Wallet',
 			accessorKey: 'name',
-			cell: ({ row, getValue }: { row: any; getValue: () => any }) => {
-				// Check if this is a detail row
-				const isDetailRow = row.original.id.endsWith('-detail')
-
-				if (isDetailRow) {
-					// Render detailed metadata for detail rows
-					const metadata = row.original
-					return (
-						<div className="p-3 bg-gray-50 rounded">
-							<div className="grid grid-cols-2 gap-2">
-								<div className="font-semibold">Type:</div>
-								<div>{metadata.typeDescription}</div>
-
-								<div className="font-semibold">Standards:</div>
-								<div>{metadata.standards}</div>
-
-								<div className="font-semibold">Website:</div>
-								<div>
-									{metadata.websiteUrl !== 'Not available' ? (
-										<a
-											href={metadata.websiteUrl}
-											target="_blank"
-											rel="noopener noreferrer"
-											className="text-blue-600 hover:underline"
-										>
-											{metadata.websiteUrl}
-										</a>
-									) : (
-										'Not available'
-									)}
-								</div>
-							</div>
-						</div>
-					)
-				}
-
-				// Regular row rendering with expand/collapse button
-				return (
-					<div style={{ paddingLeft: row.depth * 20 }}>
-						{row.getCanExpand() ? (
-							<button
-								onClick={row.getToggleExpandedHandler()}
-								style={{
-									background: 'none',
-									border: 'none',
-									cursor: 'pointer',
-									padding: '0 4px',
-								}}
-							>
-								{row.getIsExpanded() ? '▼' : '▶'}
-							</button>
-						) : (
-							<span style={{ display: 'inline-block', width: 18 }} />
-						)}{' '}
-						{getValue()}
-					</div>
-				)
-			},
+			cell: createWalletNameCell(false), // Use the shared function for software wallets
 		},
 		{
 			header: 'Type',
@@ -757,61 +814,7 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Wallet',
 			accessorKey: 'name',
-			cell: ({ row, getValue }: { row: any; getValue: () => any }) => {
-				// Check if this is a detail row
-				const isDetailRow = row.original.id.endsWith('-detail')
-
-				if (isDetailRow) {
-					// Render detailed metadata for hardware wallet detail rows
-					const metadata = row.original
-					return (
-						<div className="p-3 bg-gray-50 rounded">
-							<div className="grid grid-cols-2 gap-2">
-								<div className="font-semibold">Manufacture Type:</div>
-								<div>{metadata.manufactureType}</div>
-
-								<div className="font-semibold">Website:</div>
-								<div>
-									{metadata.websiteUrl !== 'Not available' ? (
-										<a
-											href={metadata.websiteUrl}
-											target="_blank"
-											rel="noopener noreferrer"
-											className="text-blue-600 hover:underline"
-										>
-											{metadata.websiteUrl}
-										</a>
-									) : (
-										'Not available'
-									)}
-								</div>
-							</div>
-						</div>
-					)
-				}
-
-				// Regular row rendering with expand/collapse button
-				return (
-					<div style={{ paddingLeft: row.depth * 20 }}>
-						{row.getCanExpand() ? (
-							<button
-								onClick={row.getToggleExpandedHandler()}
-								style={{
-									background: 'none',
-									border: 'none',
-									cursor: 'pointer',
-									padding: '0 4px',
-								}}
-							>
-								{row.getIsExpanded() ? '▼' : '▶'}
-							</button>
-						) : (
-							<span style={{ display: 'inline-block', width: 18 }} />
-						)}{' '}
-						{getValue()}
-					</div>
-				)
-			},
+			cell: createWalletNameCell(true), // Use the shared function for hardware wallets
 		},
 		{
 			header: 'Manufacture Type',
