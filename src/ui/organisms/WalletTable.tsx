@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/strict-boolean-expressions - Disabled for integration with tanstack table */
 import * as React from 'react'
 import { useState } from 'react'
-import {
-	useReactTable,
-	getCoreRowModel,
-	flexRender,
-	getExpandedRowModel,
-} from '@tanstack/react-table'
+import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { ratedWallets } from '@/data/wallets'
 import { ratedHardwareWallets } from '@/data/hardware-wallets'
 import {
@@ -385,7 +380,10 @@ interface TableRow {
 	id: string
 	name: string
 	wallet: WalletLike
-	subRows: TableRow[]
+	typeDescription?: string
+	standards?: string
+	websiteUrl?: string
+	manufactureType?: string
 }
 
 // Create software wallet table data
@@ -413,24 +411,9 @@ const softwareWalletData: TableRow[] = Object.values(ratedWallets).map(wallet =>
 		id: wallet.metadata.id,
 		name: wallet.metadata.displayName,
 		wallet: wallet as WalletLike,
-		// Each wallet row has a subRow for details
-		subRows: [
-			{
-				id: wallet.metadata.id + '-detail',
-				name: 'Details',
-				wallet: wallet as WalletLike,
-				// Additional metadata for detail display
-				typeDescription: detailedType,
-				standards: standardsDisplay,
-				websiteUrl,
-				// Empty subRows for detail rows (they can't be expanded further)
-				subRows: [],
-			} as TableRow & {
-				typeDescription: string
-				standards: string
-				websiteUrl: string
-			},
-		],
+		typeDescription: detailedType,
+		standards: standardsDisplay,
+		websiteUrl,
 	}
 })
 
@@ -447,95 +430,15 @@ const hardwareWalletData: TableRow[] = Object.values(ratedHardwareWallets).map(w
 		id: walletLike.metadata.id,
 		name: walletLike.metadata.displayName,
 		wallet: walletLike,
-		// Each wallet row has a subRow for details
-		subRows: [
-			{
-				id: walletLike.metadata.id + '-detail',
-				name: 'Details',
-				wallet: walletLike,
-				// Additional metadata for detail display
-				manufactureType,
-				websiteUrl,
-				// Empty subRows for detail rows (they can't be expanded further)
-				subRows: [],
-			} as TableRow & {
-				manufactureType: string
-				websiteUrl: string
-			},
-		],
+		manufactureType,
+		websiteUrl,
 	}
 })
 
-// Add this function before the softwareColumns and hardwareColumns definitions
 // Create a reusable cell renderer for wallet name columns
 function createWalletNameCell(isHardware: boolean) {
 	return ({ row, getValue }: { row: any; getValue: () => any }) => {
-		// Check if this is a detail row
-		const isDetailRow = row.original.id.endsWith('-detail')
-
-		if (isDetailRow) {
-			// Render detailed metadata for detail rows
-			const metadata = row.original
-
-			// Different detail content based on wallet type
-			if (isHardware) {
-				return (
-					<div className="p-3 bg-gray-50 rounded">
-						<div className="grid grid-cols-2 gap-2">
-							<div className="font-semibold">Manufacture Type:</div>
-							<div>{metadata.manufactureType}</div>
-
-							<div className="font-semibold">Website:</div>
-							<div>
-								{metadata.websiteUrl !== 'Not available' ? (
-									<a
-										href={metadata.websiteUrl}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="text-blue-600 hover:underline"
-									>
-										{metadata.websiteUrl}
-									</a>
-								) : (
-									'Not available'
-								)}
-							</div>
-						</div>
-					</div>
-				)
-			} else {
-				// Software wallet details
-				return (
-					<div className="p-3 bg-gray-50 rounded">
-						<div className="grid grid-cols-2 gap-2">
-							<div className="font-semibold">Type:</div>
-							<div>{metadata.typeDescription}</div>
-
-							<div className="font-semibold">Standards:</div>
-							<div>{metadata.standards}</div>
-
-							<div className="font-semibold">Website:</div>
-							<div>
-								{metadata.websiteUrl !== 'Not available' ? (
-									<a
-										href={metadata.websiteUrl}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="text-blue-600 hover:underline"
-									>
-										{metadata.websiteUrl}
-									</a>
-								) : (
-									'Not available'
-								)}
-							</div>
-						</div>
-					</div>
-				)
-			}
-		}
-
-		// Regular row rendering with expand/collapse button and logo
+		// Regular row rendering with logo
 		const walletId = row.original.wallet.metadata.id
 		const logoPath = isHardware
 			? `/images/hardware-wallets/${walletId}.svg`
@@ -545,22 +448,7 @@ function createWalletNameCell(isHardware: boolean) {
 			: '/images/wallets/default.svg'
 
 		return (
-			<div style={{ paddingLeft: row.depth * 20 }} className="flex items-center">
-				{row.getCanExpand() ? (
-					<button
-						onClick={row.getToggleExpandedHandler()}
-						style={{
-							background: 'none',
-							border: 'none',
-							cursor: 'pointer',
-							padding: '0 4px',
-						}}
-					>
-						{row.getIsExpanded() ? '▼' : '▶'}
-					</button>
-				) : (
-					<span style={{ display: 'inline-block', width: 18 }} />
-				)}{' '}
+			<div className="flex items-center">
 				{/* Wallet Logo */}
 				<div className="flex-shrink-0 mr-3">
 					<img
@@ -608,41 +496,45 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Type',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-
 				const { categories } = getWalletTypeInfo(row.wallet)
 				return categories.map(cat => WALLET_TYPE_DISPLAY[cat] || cat).join(' & ')
 			},
 			cell: (info: any) => info.getValue(),
 		},
+		// Remove Website column
 		// Add Device Support column
 		{
 			header: 'Device Support',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'device-support'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const supportsWeb = Boolean(wallet.variants?.browser)
 				const supportsMobile = Boolean(wallet.variants?.mobile)
 				const supportsDesktop = Boolean(wallet.variants?.desktop)
 				const hasVariants = supportsWeb || supportsMobile || supportsDesktop
+
+				return {
+					supportsWeb,
+					supportsMobile,
+					supportsDesktop,
+					hasVariants,
+				}
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { supportsWeb, supportsMobile, supportsDesktop, hasVariants } = value
 
 				return (
 					<div className="flex space-x-3 items-center" style={{ width: '180px' }}>
 						{supportsWeb && (
 							<button
 								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.WEB ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
-								onClick={() => handleVariantChange(DeviceVariant.WEB)}
+								onClick={() => {
+									handleVariantChange(DeviceVariant.WEB)
+								}}
 								title="Web/Browser"
 							>
 								<span className="text-xl">🌐</span>
@@ -651,7 +543,9 @@ export default function WalletTable(): React.ReactElement {
 						{supportsMobile && (
 							<button
 								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.MOBILE ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
-								onClick={() => handleVariantChange(DeviceVariant.MOBILE)}
+								onClick={() => {
+									handleVariantChange(DeviceVariant.MOBILE)
+								}}
 								title="Mobile"
 							>
 								<span className="text-xl">📱</span>
@@ -660,7 +554,9 @@ export default function WalletTable(): React.ReactElement {
 						{supportsDesktop && (
 							<button
 								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.DESKTOP ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
-								onClick={() => handleVariantChange(DeviceVariant.DESKTOP)}
+								onClick={() => {
+									handleVariantChange(DeviceVariant.DESKTOP)
+								}}
 								title="Desktop"
 							>
 								<span className="text-xl">💻</span>
@@ -675,20 +571,20 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Security',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'security'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const isSupported =
 					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
 				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return { wallet, isSupported, evalTree }
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { wallet, isSupported, evalTree } = value
 
 				return (
 					<PizzaSliceChart
@@ -702,20 +598,20 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Privacy',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'privacy'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const isSupported =
 					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
 				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return { wallet, isSupported, evalTree }
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { wallet, isSupported, evalTree } = value
 
 				return (
 					<PizzaSliceChart
@@ -729,20 +625,20 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Self Sovereignty',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'selfSovereignty'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const isSupported =
 					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
 				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return { wallet, isSupported, evalTree }
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { wallet, isSupported, evalTree } = value
 
 				return (
 					<PizzaSliceChart
@@ -756,20 +652,20 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Transparency',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'transparency'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const isSupported =
 					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
 				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return { wallet, isSupported, evalTree }
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { wallet, isSupported, evalTree } = value
 
 				return (
 					<PizzaSliceChart
@@ -783,20 +679,20 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Ecosystem',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'ecosystem'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const isSupported =
 					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
 				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return { wallet, isSupported, evalTree }
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { wallet, isSupported, evalTree } = value
 
 				return (
 					<PizzaSliceChart
@@ -819,34 +715,36 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Manufacture Type',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-
 				const wallet = row.wallet
 				return getHardwareWalletManufactureTypeDisplay(wallet)
 			},
 			cell: (info: any) => info.getValue(),
 		},
+		// Remove Website column
 		// Add Device Support column for hardware wallets too
 		{
 			header: 'Device Support',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'device-support'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const supportsWeb = Boolean(wallet.variants?.browser)
 				const supportsMobile = Boolean(wallet.variants?.mobile)
 				const supportsDesktop = Boolean(wallet.variants?.desktop)
 				const hasVariants = supportsWeb || supportsMobile || supportsDesktop
+
+				return {
+					supportsWeb,
+					supportsMobile,
+					supportsDesktop,
+					hasVariants,
+				}
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { supportsWeb, supportsMobile, supportsDesktop, hasVariants } = value
 
 				return (
 					<div className="flex space-x-3 items-center" style={{ width: '180px' }}>
@@ -892,20 +790,20 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Security',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'security'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const isSupported =
 					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
 				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return { wallet, isSupported, evalTree }
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { wallet, isSupported, evalTree } = value
 
 				return (
 					<PizzaSliceChart
@@ -919,20 +817,20 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Privacy',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'privacy'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const isSupported =
 					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
 				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return { wallet, isSupported, evalTree }
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { wallet, isSupported, evalTree } = value
 
 				return (
 					<PizzaSliceChart
@@ -946,20 +844,20 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Self Sovereignty',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'selfSovereignty'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const isSupported =
 					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
 				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return { wallet, isSupported, evalTree }
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { wallet, isSupported, evalTree } = value
 
 				return (
 					<PizzaSliceChart
@@ -973,20 +871,20 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Transparency',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'transparency'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const isSupported =
 					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
 				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return { wallet, isSupported, evalTree }
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { wallet, isSupported, evalTree } = value
 
 				return (
 					<PizzaSliceChart
@@ -1000,20 +898,20 @@ export default function WalletTable(): React.ReactElement {
 		{
 			header: 'Ecosystem',
 			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-				return 'ecosystem'
-			},
-			cell: (info: any) => {
-				if (!info.getValue()) {
-					return null
-				}
-
-				const wallet = info.row.original.wallet
+				const wallet = row.wallet
 				const isSupported =
 					selectedVariant === DeviceVariant.NONE || walletSupportsVariant(wallet, selectedVariant)
 				const evalTree = getEvaluationTree(wallet, selectedVariant)
+
+				return { wallet, isSupported, evalTree }
+			},
+			cell: (info: any) => {
+				const value = info.getValue()
+				if (!value) {
+					return null
+				}
+
+				const { wallet, isSupported, evalTree } = value
 
 				return (
 					<PizzaSliceChart
@@ -1034,8 +932,6 @@ export default function WalletTable(): React.ReactElement {
 		data: tableData,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
-		getExpandedRowModel: getExpandedRowModel(),
-		getSubRows: row => row.subRows,
 	})
 
 	return (
@@ -1048,7 +944,9 @@ export default function WalletTable(): React.ReactElement {
 							? 'border-b-2 border-blue-500 text-blue-600'
 							: 'text-gray-500 hover:text-gray-700'
 					}`}
-					onClick={() => handleTabChange(WalletTableTab.SOFTWARE)}
+					onClick={() => {
+						handleTabChange(WalletTableTab.SOFTWARE)
+					}}
 				>
 					Software Wallets
 				</button>
@@ -1058,7 +956,9 @@ export default function WalletTable(): React.ReactElement {
 							? 'border-b-2 border-blue-500 text-blue-600'
 							: 'text-gray-500 hover:text-gray-700'
 					}`}
-					onClick={() => handleTabChange(WalletTableTab.HARDWARE)}
+					onClick={() => {
+						handleTabChange(WalletTableTab.HARDWARE)
+					}}
 				>
 					Hardware Wallets
 				</button>
@@ -1084,37 +984,17 @@ export default function WalletTable(): React.ReactElement {
 					{table
 						.getRowModel()
 						.rows.map(row => {
-							// Skip rendering detail rows for unsupported wallets
-							const isDetailRow = row.original.id.endsWith('-detail')
-							const parentWallet = isDetailRow
-								? tableData.find(w => w.id === row.original.id.replace('-detail', ''))?.wallet
-								: row.original.wallet
-
-							// For software wallets, check variant support
+							const parentWallet = row.original.wallet
 							const isSupported =
 								!parentWallet ||
 								activeTab === WalletTableTab.HARDWARE ||
 								selectedVariant === DeviceVariant.NONE ||
 								walletSupportsVariant(parentWallet, selectedVariant)
 
-							// Skip detail rows for unsupported wallets
-							if (isDetailRow && !isSupported) {
-								return null
-							}
-
 							return (
-								<tr
-									key={row.id}
-									className={`${row.original.id.endsWith('-detail') ? 'bg-gray-50' : ''} ${!isSupported ? 'opacity-50' : ''}`}
-								>
+								<tr key={row.id} className={`${!isSupported ? 'opacity-50' : ''}`}>
 									{row.getVisibleCells().map(cell => (
-										<td
-											key={cell.id}
-											className="px-4 py-2"
-											colSpan={
-												row.original.id.endsWith('-detail') && cell.column.id === '0' ? 2 : 1
-											}
-										>
+										<td key={cell.id} className="px-4 py-2">
 											{flexRender(cell.column.columnDef.cell, cell.getContext())}
 										</td>
 									))}
