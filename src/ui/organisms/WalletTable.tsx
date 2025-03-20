@@ -536,7 +536,7 @@ export default function WalletTable(): React.ReactElement {
 				const { supportsWeb, supportsMobile, supportsDesktop, hasVariants } = value
 
 				return (
-					<div className="flex space-x-3 items-center" style={{ width: '180px' }}>
+					<div className="flex space-x-3 items-center">
 						{supportsWeb && (
 							<button
 								className={`p-1 rounded-md ${selectedVariant === DeviceVariant.WEB ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}`}
