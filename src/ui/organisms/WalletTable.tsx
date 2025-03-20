@@ -16,6 +16,7 @@ import type { EvaluationTree } from '@/schema/attribute-groups'
 import { RatingDetailModal } from '../molecules/RatingDetailModal'
 import { HardwareWalletManufactureType } from '@/schema/features/profile'
 import { WebIcon, MobileIcon, DesktopIcon } from '@/icons'
+import { HardwareIcon } from '@/icons/devices/HardwareIcon'
 
 // Define wallet type constants from the previous implementation
 const WalletTypeCategory = {
@@ -30,6 +31,7 @@ const DeviceVariant = {
 	WEB: 'browser',
 	MOBILE: 'mobile',
 	DESKTOP: 'desktop',
+	HARDWARE: 'hardware',
 } as const
 
 // Define tab types for the wallet table
@@ -169,11 +171,29 @@ function walletSupportsVariant(wallet: WalletLike, variant: DeviceVariant): bool
 	if (variant === DeviceVariant.NONE) {
 		return true
 	}
+
+	// For hardware variant in hardware wallets tab
+	if (variant === DeviceVariant.HARDWARE) {
+		// Hardware wallets always support the hardware variant
+		const isHardware =
+			wallet.metadata.walletType?.category === WalletTypeCategory.HARDWARE_WALLET ||
+			Boolean(
+				wallet.metadata.multiWalletType?.categories?.includes(WalletTypeCategory.HARDWARE_WALLET),
+			)
+
+		return isHardware
+	}
+
 	return Boolean(wallet.variants && variant in wallet.variants)
 }
 
 // Helper function to get device-specific evaluation tree
 function getEvaluationTree(wallet: WalletLike, selectedVariant: DeviceVariant): EvaluationTree {
+	// For hardware wallet variant, use overall evaluation data as hardware wallets don't have separate device variants
+	if (selectedVariant === DeviceVariant.HARDWARE) {
+		return wallet.overall
+	}
+
 	if (selectedVariant === DeviceVariant.NONE || !wallet.variants) {
 		return wallet.overall
 	}
@@ -769,23 +789,13 @@ export default function WalletTable(): React.ReactElement {
 			},
 			cell: (info: any) => info.getValue(),
 		},
-		// Remove Website column
-		// Add Device Support column for hardware wallets too
+		// Replace web/mobile/desktop device selector with hardware icon for hardware wallets
 		{
 			header: 'Risk by device',
 			accessorFn: (row: any) => {
 				const wallet = row.wallet
-				const supportsWeb = Boolean(wallet.variants?.browser)
-				const supportsMobile = Boolean(wallet.variants?.mobile)
-				const supportsDesktop = Boolean(wallet.variants?.desktop)
-				const hasVariants = supportsWeb || supportsMobile || supportsDesktop
-
-				return {
-					supportsWeb,
-					supportsMobile,
-					supportsDesktop,
-					hasVariants,
-				}
+				// For hardware wallets, we just need the wallet and whether it has hardware attributes
+				return { wallet }
 			},
 			cell: (info: any) => {
 				const value = info.getValue()
@@ -793,82 +803,36 @@ export default function WalletTable(): React.ReactElement {
 					return null
 				}
 
-				const { supportsWeb, supportsMobile, supportsDesktop } = value
-
 				return (
-					<div className="flex space-x-6 items-center">
+					<div className="flex space-x-0 items-center justify-center">
 						<div className="flex flex-col items-center">
 							<button
 								className={`p-2 rounded-md ${
-									!supportsWeb
-										? 'opacity-40 cursor-not-allowed text-gray-400'
-										: selectedVariant === DeviceVariant.WEB
-											? 'text-purple-700'
-											: 'text-gray-600 hover:text-gray-900'
+									selectedVariant === DeviceVariant.NONE
+										? 'text-gray-600 hover:text-gray-900'
+										: 'text-purple-700'
 								}`}
 								onClick={() => {
-									if (supportsWeb) {
-										handleVariantChange(DeviceVariant.WEB)
-									}
+									// Toggle between none and hardware selection
+									handleVariantChange(
+										selectedVariant === DeviceVariant.NONE
+											? DeviceVariant.HARDWARE
+											: DeviceVariant.NONE,
+									)
 								}}
-								title={supportsWeb ? 'Web/Browser' : 'Web/Browser (Not Supported)'}
-								disabled={!supportsWeb}
+								title="Hardware"
 							>
-								<WebIcon />
+								<HardwareIcon
+									style={{
+										width: '24px',
+										height: '24px',
+										fill: selectedVariant === DeviceVariant.NONE ? 'currentColor' : '#9333EA',
+									}}
+								/>
 							</button>
 							<div
 								className={`w-2 h-2 rounded-full mt-1 ${
-									selectedVariant === DeviceVariant.WEB ? 'bg-purple-700' : 'bg-gray-300'
-								}`}
-							/>
-						</div>
-						<div className="flex flex-col items-center">
-							<button
-								className={`p-2 rounded-md ${
-									!supportsMobile
-										? 'opacity-40 cursor-not-allowed text-gray-400'
-										: selectedVariant === DeviceVariant.MOBILE
-											? 'text-purple-700'
-											: 'text-gray-600 hover:text-gray-900'
-								}`}
-								onClick={() => {
-									if (supportsMobile) {
-										handleVariantChange(DeviceVariant.MOBILE)
-									}
-								}}
-								title={supportsMobile ? 'Mobile' : 'Mobile (Not Supported)'}
-								disabled={!supportsMobile}
-							>
-								<MobileIcon />
-							</button>
-							<div
-								className={`w-2 h-2 rounded-full mt-1 ${
-									selectedVariant === DeviceVariant.MOBILE ? 'bg-purple-700' : 'bg-gray-300'
-								}`}
-							/>
-						</div>
-						<div className="flex flex-col items-center">
-							<button
-								className={`p-2 rounded-md ${
-									!supportsDesktop
-										? 'opacity-40 cursor-not-allowed text-gray-400'
-										: selectedVariant === DeviceVariant.DESKTOP
-											? 'text-purple-700'
-											: 'text-gray-600 hover:text-gray-900'
-								}`}
-								onClick={() => {
-									if (supportsDesktop) {
-										handleVariantChange(DeviceVariant.DESKTOP)
-									}
-								}}
-								title={supportsDesktop ? 'Desktop' : 'Desktop (Not Supported)'}
-								disabled={!supportsDesktop}
-							>
-								<DesktopIcon />
-							</button>
-							<div
-								className={`w-2 h-2 rounded-full mt-1 ${
-									selectedVariant === DeviceVariant.DESKTOP ? 'bg-purple-700' : 'bg-gray-300'
+									selectedVariant !== DeviceVariant.NONE ? 'bg-purple-700' : 'bg-gray-300'
 								}`}
 							/>
 						</div>
@@ -1084,9 +1048,12 @@ export default function WalletTable(): React.ReactElement {
 							const parentWallet = row.original.wallet
 							const isSupported =
 								!parentWallet ||
-								activeTab === WalletTableTab.HARDWARE ||
-								selectedVariant === DeviceVariant.NONE ||
-								walletSupportsVariant(parentWallet, selectedVariant)
+								(activeTab === WalletTableTab.HARDWARE &&
+									(selectedVariant === DeviceVariant.NONE ||
+										selectedVariant === DeviceVariant.HARDWARE)) ||
+								(activeTab === WalletTableTab.SOFTWARE &&
+									(selectedVariant === DeviceVariant.NONE ||
+										walletSupportsVariant(parentWallet, selectedVariant)))
 
 							return (
 								<tr key={row.id} className={`${!isSupported ? 'opacity-50' : ''}`}>
