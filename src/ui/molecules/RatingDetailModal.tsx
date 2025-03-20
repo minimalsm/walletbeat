@@ -134,7 +134,9 @@ export function RatingDetailModal({
 						transition: 'opacity 0.2s ease-in-out',
 						cursor: 'pointer',
 					}}
-					onMouseEnter={() => handleMouseEnter(i)}
+					onMouseEnter={() => {
+						handleMouseEnter(i)
+					}}
 					onMouseLeave={handleMouseLeave}
 				/>,
 			)
@@ -188,7 +190,7 @@ export function RatingDetailModal({
 					}}
 				>
 					{/* Chart */}
-					<Box sx={{ width: 300, height: 300, flexShrink: 0 }}>
+					<Box sx={{ width: 280, height: 280, flexShrink: 0 }}>
 						<svg viewBox="0 0 300 300" width="100%" height="100%">
 							{createEnlargedSlices()}
 						</svg>
@@ -196,7 +198,7 @@ export function RatingDetailModal({
 
 					{/* Attribute details */}
 					<Box sx={{ flex: 1, width: '100%' }}>
-						<Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+						<Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
 							Attribute Details:
 						</Typography>
 						{attributeRatings.length > 0 ? (
@@ -204,7 +206,7 @@ export function RatingDetailModal({
 								sx={{
 									display: 'flex',
 									flexDirection: 'column',
-									gap: 1.5,
+									gap: 1,
 									maxHeight: isMobile ? '300px' : '350px',
 									overflowY: 'auto',
 									pr: 1,
@@ -216,43 +218,53 @@ export function RatingDetailModal({
 										sx={{
 											display: 'flex',
 											alignItems: 'center',
-											p: 1.5,
+											p: 1,
 											borderRadius: 1,
 											backgroundColor:
 												highlightedSlice === index ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.05)',
 											transition: 'background-color 0.2s ease',
 											cursor: 'pointer',
+											fontSize: '0.9rem',
 										}}
-										onMouseEnter={() => handleMouseEnter(index)}
+										onMouseEnter={() => {
+											handleMouseEnter(index)
+										}}
 										onMouseLeave={handleMouseLeave}
 									>
 										<Box
 											sx={{
-												width: 16,
-												height: 16,
+												width: 12,
+												height: 12,
 												borderRadius: '50%',
 												backgroundColor: getRatingColor(attr.rating),
-												mr: 2,
+												mr: 1.5,
 												flexShrink: 0,
 											}}
 										/>
-										<Typography variant="body1" sx={{ flex: 1 }}>
+										<Typography
+											variant="body2"
+											sx={{
+												flex: 1,
+												fontSize: '0.9rem',
+											}}
+										>
 											{getAttributeName(attr.id)}
 										</Typography>
 										<Box
 											sx={{
 												backgroundColor: getRatingColor(attr.rating),
-												px: 1.5,
-												py: 0.5,
+												px: 1,
+												py: 0.25,
 												borderRadius: 1,
 												color:
 													attr.rating === Rating.FAIL || attr.rating === Rating.PASS
 														? 'white'
 														: 'black',
 												fontWeight: 'bold',
-												minWidth: 65,
+												minWidth: 50,
 												textAlign: 'center',
 												flexShrink: 0,
+												fontSize: '0.8rem',
 											}}
 										>
 											{getRatingText(attr.rating)}
