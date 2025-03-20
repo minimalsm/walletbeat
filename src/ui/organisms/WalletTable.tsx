@@ -473,6 +473,18 @@ export default function WalletTable(): React.ReactElement {
 				)
 			},
 		},
+		{
+			header: 'Type',
+			accessorFn: (row: any) => {
+				if (row.id.endsWith('-detail')) {
+					return null
+				}
+
+				const { categories } = getWalletTypeInfo(row.wallet)
+				return categories.map(cat => WALLET_TYPE_DISPLAY[cat] || cat).join(' & ')
+			},
+			cell: (info: any) => info.getValue(),
+		},
 		// Add Device Support column
 		{
 			header: 'Device Support',
@@ -527,18 +539,6 @@ export default function WalletTable(): React.ReactElement {
 					</div>
 				)
 			},
-		},
-		{
-			header: 'Type',
-			accessorFn: (row: any) => {
-				if (row.id.endsWith('-detail')) {
-					return null
-				}
-
-				const { categories } = getWalletTypeInfo(row.wallet)
-				return categories.map(cat => WALLET_TYPE_DISPLAY[cat] || cat).join(' & ')
-			},
-			cell: (info: any) => info.getValue(),
 		},
 		// Add the five category columns
 		{
