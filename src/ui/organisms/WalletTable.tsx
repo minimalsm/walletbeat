@@ -230,7 +230,7 @@ function PizzaSliceChart({
 		// Calculate the overall score safely
 		const categoryKey = attrGroup.id as keyof EvaluationTree
 		const categoryData = evalTree[categoryKey]
-		
+
 		// Only proceed if we have both category data and a score function
 		if (!categoryData || typeof attrGroup.score !== 'function') {
 			// If missing data, leave overallScore as 0
@@ -238,7 +238,7 @@ function PizzaSliceChart({
 			// Type assertions needed due to complexity of types
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
 			const scoreResult = attrGroup.score(categoryData as any)
-			
+
 			// Check for valid score result with safe object property access
 			if (typeof scoreResult === 'object' && scoreResult !== null && 'score' in scoreResult) {
 				// Safe access to score property
