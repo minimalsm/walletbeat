@@ -994,28 +994,34 @@ export default function WalletTable(): React.ReactElement {
 			<div className="sticky top-0 bg-white z-10">
 				<div className="flex">
 					<button
-						className={`px-4 py-2 font-medium text-sm focus:outline-none ${
+						className={`px-4 py-3 font-medium text-sm rounded-tr-lg rounded-tl-lg transition-transform ${
 							activeTab === WalletTableTab.SOFTWARE
-								? 'border-b-2 border-blue-500 text-blue-600'
-								: 'text-gray-500 hover:text-gray-700'
+								? 'bg-white shadow-sm text-gray-800 border border-b-0 border-[#DE69BB]'
+								: 'text-gray-500 hover:text-gray-700 bg-[#EAEAEA]'
 						}`}
 						onClick={() => {
 							handleTabChange(WalletTableTab.SOFTWARE)
 						}}
 					>
-						Software Wallets
+						Software wallets
+						<span className="ml-2 px-2 py-0.5 text-xs text-white font-medium bg-purple-500 rounded-full">
+							{softwareWalletData.length}
+						</span>
 					</button>
 					<button
-						className={`px-4 py-2 font-medium text-sm focus:outline-none ${
+						className={`px-4 py-3 font-medium text-sm rounded-tr-lg rounded-tl-lg transition-transform ${
 							activeTab === WalletTableTab.HARDWARE
-								? 'border-b-2 border-blue-500 text-blue-600'
-								: 'text-gray-500 hover:text-gray-700'
+								? 'bg-white shadow-sm text-gray-800 border border-b-0 border-[#DE69BB]'
+								: 'text-gray-500 hover:text-gray-700 bg-[#EAEAEA]'
 						}`}
 						onClick={() => {
 							handleTabChange(WalletTableTab.HARDWARE)
 						}}
 					>
-						Hardware Wallets
+						Hardware wallets
+						<span className="ml-2 px-2 py-0.5 text-xs text-white font-medium bg-purple-500 rounded-full">
+							{hardwareWalletData.length}
+						</span>
 					</button>
 				</div>
 			</div>
