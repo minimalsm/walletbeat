@@ -1,5 +1,8 @@
-import type React from 'react'
-import { Box, Modal, Typography, Button, Paper } from '@mui/material'
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, 
+@typescript-eslint/no-unsafe-assignment, @typescript-eslint/strict-boolean-expressions,
+@typescript-eslint/no-unsafe-call -- Disabled for complex typing with attribute groups */
+import React from 'react'
+import { Box, Modal, Typography, Button, Paper, useMediaQuery, useTheme } from '@mui/material'
 import { Rating, type AttributeGroup } from '@/schema/attributes'
 import type { EvaluationTree } from '@/schema/attribute-groups'
 
@@ -29,7 +32,8 @@ function getRatingColor(rating: Rating): string {
 			return '#f1c40f' // Yellow
 		case Rating.FAIL:
 			return '#e74c3c' // Red
-		default:
+		case Rating.UNRATED:
+		case Rating.EXEMPT:
 			return '#bdc3c7' // Gray
 	}
 }
@@ -47,8 +51,6 @@ function getRatingText(rating: Rating): string {
 			return 'Unrated'
 		case Rating.EXEMPT:
 			return 'Exempt'
-		default:
-			return 'Unknown'
 	}
 }
 
@@ -59,21 +61,30 @@ export function RatingDetailModal({
 	evalTree,
 	attributeRatings,
 }: RatingDetailModalProps): React.ReactElement {
+	const theme = useTheme()
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+	const [highlightedSlice, setHighlightedSlice] = React.useState<number | null>(null)
+
 	// Calculate overall score
 	let overallScore = 0
 	try {
 		// Get the category object based on attribute group ID
-		const categoryData = evalTree[attrGroup.id as keyof EvaluationTree]
-		if (categoryData) {
-			const score = attrGroup.score(categoryData as any)
-			overallScore = score?.score ?? 0
+		const categoryKey = attrGroup.id as keyof EvaluationTree
+		const categoryData = evalTree[categoryKey]
+
+		// Calculate score if data is available
+		if (categoryData && attrGroup.score) {
+			const result = attrGroup.score(categoryData)
+			if (result && typeof result === 'object' && 'score' in result) {
+				overallScore = result.score
+			}
 		}
 	} catch (e) {
 		console.error(`Error calculating score for ${attrGroup.id}:`, e)
 	}
 
 	// Create SVG slices for the enlarged chart
-	const createEnlargedSlices = () => {
+	const createEnlargedSlices = (): React.ReactNode[] => {
 		const slices = []
 		const attributeCount = attributeRatings.length > 0 ? attributeRatings.length : 4
 		const centerX = 150
@@ -97,12 +108,6 @@ export function RatingDetailModal({
 			const x2 = centerX + radius * Math.cos(endRad)
 			const y2 = centerY + radius * Math.sin(endRad)
 
-			// Calculate coordinates for label placement
-			const labelRad = ((startAngle + sliceAngle / 2 - 90) * Math.PI) / 180
-			const labelRadius = radius * 1.3 // Place labels slightly outside the pie
-			const labelX = centerX + labelRadius * Math.cos(labelRad)
-			const labelY = centerY + labelRadius * Math.sin(labelRad)
-
 			// Create path for the slice
 			const largeArcFlag = sliceAngle > 180 ? 1 : 0
 
@@ -113,61 +118,35 @@ export function RatingDetailModal({
                 Z
             `
 
-			const rating = attributeRatings[i]?.rating ?? 'UNRATED'
+			const rating = attributeRatings[i]?.rating ?? Rating.UNRATED
 			const sliceColor = getRatingColor(rating)
 
-			// Add the slice and its label
+			// Add the slice
 			slices.push(
-				<g key={i}>
-					<path d={pathData} fill={sliceColor} stroke="#ffffff" strokeWidth="2" />
-					{attributeRatings[i] && (
-						<foreignObject
-							x={labelX - 75}
-							y={labelY - 20}
-							width={150}
-							height={40}
-							style={{
-								overflow: 'visible',
-								textAlign: startAngle > 90 && startAngle < 270 ? 'right' : 'left',
-							}}
-						>
-							<div
-								style={{
-									display: 'flex',
-									flexDirection: 'column',
-									alignItems: startAngle > 90 && startAngle < 270 ? 'flex-end' : 'flex-start',
-								}}
-							>
-								<span
-									style={{
-										fontWeight: 'bold',
-										fontSize: '14px',
-										whiteSpace: 'nowrap',
-									}}
-								>
-									{getAttributeName(attributeRatings[i].id)}
-								</span>
-								<span
-									style={{
-										backgroundColor: sliceColor,
-										padding: '2px 6px',
-										borderRadius: '4px',
-										color: rating === 'FAIL' || rating === 'PASS' ? 'white' : 'black',
-										fontSize: '12px',
-										fontWeight: 'bold',
-										marginTop: '2px',
-									}}
-								>
-									{getRatingText(rating)}
-								</span>
-							</div>
-						</foreignObject>
-					)}
-				</g>,
+				<path
+					key={i}
+					d={pathData}
+					fill={sliceColor}
+					stroke="#ffffff"
+					strokeWidth="2"
+					style={{
+						opacity: highlightedSlice === null || highlightedSlice === i ? 1 : 0.4,
+						transition: 'opacity 0.2s ease-in-out',
+					}}
+				/>,
 			)
 		}
 
 		return slices
+	}
+
+	// Handlers for hover events
+	const handleMouseEnter = (index: number): void => {
+		setHighlightedSlice(index)
+	}
+
+	const handleMouseLeave = (): void => {
+		setHighlightedSlice(null)
 	}
 
 	return (
@@ -178,17 +157,17 @@ export function RatingDetailModal({
 					top: '50%',
 					left: '50%',
 					transform: 'translate(-50%, -50%)',
-					width: 600,
-					maxWidth: '90vw',
+					width: isMobile ? '95%' : 700,
+					maxWidth: '95vw',
 					maxHeight: '90vh',
 					overflow: 'auto',
 					bgcolor: 'background.paper',
 					boxShadow: 24,
 					borderRadius: 2,
-					p: 4,
+					p: 3,
 				}}
 			>
-				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
 					<Typography variant="h5" component="h2" id="rating-detail-modal-title">
 						{attrGroup.displayName} - {Math.round(overallScore * 100)}% Overall
 					</Typography>
@@ -197,62 +176,95 @@ export function RatingDetailModal({
 					</Button>
 				</Box>
 
-				<Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-					<Box sx={{ position: 'relative', width: 300, height: 300 }}>
+				<Box
+					sx={{
+						display: 'flex',
+						flexDirection: isMobile ? 'column' : 'row',
+						gap: 4,
+						alignItems: isMobile ? 'center' : 'flex-start',
+					}}
+				>
+					{/* Chart */}
+					<Box sx={{ width: 300, height: 300, flexShrink: 0 }}>
 						<svg viewBox="0 0 300 300" width="100%" height="100%">
 							{createEnlargedSlices()}
 						</svg>
 					</Box>
-				</Box>
 
-				<Box sx={{ mt: 3 }}>
-					<Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-						Attribute Details:
-					</Typography>
-					{attributeRatings.length > 0 ? (
-						attributeRatings.map(attr => (
+					{/* Attribute details */}
+					<Box sx={{ flex: 1, width: '100%' }}>
+						<Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+							Attribute Details:
+						</Typography>
+						{attributeRatings.length > 0 ? (
 							<Box
-								key={attr.id}
 								sx={{
 									display: 'flex',
-									alignItems: 'center',
-									mb: 1,
-									p: 1,
-									borderRadius: 1,
-									backgroundColor: 'rgba(0,0,0,0.05)',
+									flexDirection: 'column',
+									gap: 1.5,
+									maxHeight: isMobile ? '300px' : '350px',
+									overflowY: 'auto',
+									pr: 1,
 								}}
 							>
-								<Box
-									sx={{
-										width: 16,
-										height: 16,
-										borderRadius: '50%',
-										backgroundColor: getRatingColor(attr.rating),
-										mr: 2,
-									}}
-								/>
-								<Typography variant="body1" sx={{ flex: 1 }}>
-									{getAttributeName(attr.id)}
-								</Typography>
-								<Box
-									sx={{
-										backgroundColor: getRatingColor(attr.rating),
-										px: 1.5,
-										py: 0.5,
-										borderRadius: 1,
-										color: attr.rating === 'FAIL' || attr.rating === 'PASS' ? 'white' : 'black',
-										fontWeight: 'bold',
-									}}
-								>
-									{getRatingText(attr.rating)}
-								</Box>
+								{attributeRatings.map((attr, index) => (
+									<Box
+										key={attr.id}
+										sx={{
+											display: 'flex',
+											alignItems: 'center',
+											p: 1.5,
+											borderRadius: 1,
+											backgroundColor:
+												highlightedSlice === index ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.05)',
+											transition: 'background-color 0.2s ease',
+											cursor: 'pointer',
+										}}
+										onMouseEnter={() => {
+											handleMouseEnter(index)
+										}}
+										onMouseLeave={handleMouseLeave}
+									>
+										<Box
+											sx={{
+												width: 16,
+												height: 16,
+												borderRadius: '50%',
+												backgroundColor: getRatingColor(attr.rating),
+												mr: 2,
+												flexShrink: 0,
+											}}
+										/>
+										<Typography variant="body1" sx={{ flex: 1 }}>
+											{getAttributeName(attr.id)}
+										</Typography>
+										<Box
+											sx={{
+												backgroundColor: getRatingColor(attr.rating),
+												px: 1.5,
+												py: 0.5,
+												borderRadius: 1,
+												color:
+													attr.rating === Rating.FAIL || attr.rating === Rating.PASS
+														? 'white'
+														: 'black',
+												fontWeight: 'bold',
+												minWidth: 65,
+												textAlign: 'center',
+												flexShrink: 0,
+											}}
+										>
+											{getRatingText(attr.rating)}
+										</Box>
+									</Box>
+								))}
 							</Box>
-						))
-					) : (
-						<Typography variant="body2" color="text.secondary">
-							No attribute ratings available for this category.
-						</Typography>
-					)}
+						) : (
+							<Typography variant="body2" color="text.secondary">
+								No attribute ratings available for this category.
+							</Typography>
+						)}
+					</Box>
 				</Box>
 			</Paper>
 		</Modal>

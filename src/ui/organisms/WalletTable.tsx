@@ -169,45 +169,39 @@ function getAttributeRatings(
 	const attributes: { rating: Rating; id: string }[] = []
 
 	try {
-		let attrEntries: Record<string, any> = {}
+		// Get the category key and data safely
+		const categoryKey = attrGroup.id as keyof EvaluationTree
+		const categoryData = evalTree[categoryKey]
 
-		// Get the attributes from the specific category
-		switch (attrGroup.id) {
-			case 'security':
-				attrEntries = evalTree.security ? evalTree.security : {}
-				break
-			case 'privacy':
-				attrEntries = evalTree.privacy ? evalTree.privacy : {}
-				break
-			case 'selfSovereignty':
-				attrEntries = evalTree.selfSovereignty ? evalTree.selfSovereignty : {}
-				break
-			case 'transparency':
-				attrEntries = evalTree.transparency ? evalTree.transparency : {}
-				break
-			case 'ecosystem':
-				attrEntries = evalTree.ecosystem ? evalTree.ecosystem : {}
-				break
+		if (!categoryData) {
+			return attributes
 		}
 
+		// We need to handle the categoryData as a dynamic object
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const dataObj = categoryData as Record<string, any>
+
 		// Extract ratings from attributes
-		for (const key in attrEntries) {
-			if (Object.prototype.hasOwnProperty.call(attrEntries, key)) {
-				const evalAttr = attrEntries[key]
-				if (
-					evalAttr &&
-					evalAttr.evaluation &&
-					evalAttr.evaluation.value &&
-					evalAttr.evaluation.value.rating !== Rating.EXEMPT
-				) {
-					attributes.push({
-						id: key,
-						rating: evalAttr.evaluation.value.rating as Rating,
-					})
+		for (const key in dataObj) {
+			if (Object.prototype.hasOwnProperty.call(dataObj, key)) {
+				const evalAttr = dataObj[key]
+
+				// Check if evaluation data is present and has a rating
+				if (evalAttr?.evaluation?.value?.rating !== undefined) {
+					const rating = evalAttr.evaluation.value.rating
+
+					// Skip exempt ratings
+					if (rating !== Rating.EXEMPT) {
+						attributes.push({
+							id: key,
+							rating: rating as Rating,
+						})
+					}
 				}
 			}
 		}
 	} catch (e) {
+		// eslint-disable-next-line no-console -- Error logging needed for debugging
 		console.error(`Error extracting ratings for ${attrGroup.id}:`, e)
 	}
 
@@ -233,40 +227,27 @@ function PizzaSliceChart({
 	let overallScore = 0
 
 	try {
-		// Calculate the overall score
-		switch (attrGroup.id) {
-			case 'security':
-				if (evalTree.security) {
-					const score = attrGroup.score(evalTree.security as any)
-					overallScore = score?.score ?? 0
-				}
-				break
-			case 'privacy':
-				if (evalTree.privacy) {
-					const score = attrGroup.score(evalTree.privacy as any)
-					overallScore = score?.score ?? 0
-				}
-				break
-			case 'selfSovereignty':
-				if (evalTree.selfSovereignty) {
-					const score = attrGroup.score(evalTree.selfSovereignty as any)
-					overallScore = score?.score ?? 0
-				}
-				break
-			case 'transparency':
-				if (evalTree.transparency) {
-					const score = attrGroup.score(evalTree.transparency as any)
-					overallScore = score?.score ?? 0
-				}
-				break
-			case 'ecosystem':
-				if (evalTree.ecosystem) {
-					const score = attrGroup.score(evalTree.ecosystem as any)
-					overallScore = score?.score ?? 0
-				}
-				break
+		// Calculate the overall score safely
+		const categoryKey = attrGroup.id as keyof EvaluationTree
+		const categoryData = evalTree[categoryKey]
+		
+		// Only proceed if we have both category data and a score function
+		if (!categoryData || typeof attrGroup.score !== 'function') {
+			// If missing data, leave overallScore as 0
+		} else {
+			// Type assertions needed due to complexity of types
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
+			const scoreResult = attrGroup.score(categoryData as any)
+			
+			// Check for valid score result with safe object property access
+			if (typeof scoreResult === 'object' && scoreResult !== null && 'score' in scoreResult) {
+				// Safe access to score property
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				overallScore = scoreResult.score
+			}
 		}
 	} catch (e) {
+		// eslint-disable-next-line no-console -- Error logging needed for debugging
 		console.error(`Error calculating score for ${attrGroup.id}:`, e)
 	}
 
