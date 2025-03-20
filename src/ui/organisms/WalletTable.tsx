@@ -357,7 +357,6 @@ function PizzaSliceChart({
 						{createSlices()}
 					</svg>
 				</div>
-				<div className="mt-1 text-xs font-medium">{attrGroup.displayName}</div>
 			</div>
 
 			{/* Rating Detail Modal */}
