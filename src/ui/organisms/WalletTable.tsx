@@ -1063,7 +1063,14 @@ export default function WalletTable(): React.ReactElement {
 							{headerGroup.headers.map(header => (
 								<th
 									key={header.id}
-									className="px-4 py-2 text-left text-[14px] font-bold text-[#616161] bg-gray-100"
+									className={`px-4 py-2 text-left text-[14px] text-[#616161] bg-gray-100 ${
+										header.column.columnDef.header === 'Wallet' ||
+										header.column.columnDef.header === 'Type'
+											? 'font-bold'
+											: header.column.columnDef.header === 'Device Support'
+												? 'font-semibold'
+												: 'font-normal'
+									}`}
 								>
 									{flexRender(header.column.columnDef.header, header.getContext())}
 								</th>
