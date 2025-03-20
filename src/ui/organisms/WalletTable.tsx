@@ -513,7 +513,7 @@ export default function WalletTable(): React.ReactElement {
 		// Remove Website column
 		// Add Device Support column
 		{
-			header: 'Device Support',
+			header: 'Risk by device',
 			accessorFn: (row: any) => {
 				const wallet = row.wallet
 				const supportsWeb = Boolean(wallet.variants?.browser)
@@ -673,7 +673,7 @@ export default function WalletTable(): React.ReactElement {
 			},
 		},
 		{
-			header: 'Self Sovereignty',
+			header: 'Sovereignty',
 			accessorFn: (row: any) => {
 				const wallet = row.wallet
 				const isSupported =
@@ -773,7 +773,7 @@ export default function WalletTable(): React.ReactElement {
 		// Remove Website column
 		// Add Device Support column for hardware wallets too
 		{
-			header: 'Device Support',
+			header: 'Risk by device',
 			accessorFn: (row: any) => {
 				const wallet = row.wallet
 				const supportsWeb = Boolean(wallet.variants?.browser)
@@ -933,7 +933,7 @@ export default function WalletTable(): React.ReactElement {
 			},
 		},
 		{
-			header: 'Self Sovereignty',
+			header: 'Sovereignty',
 			accessorFn: (row: any) => {
 				const wallet = row.wallet
 				const isSupported =
@@ -1067,7 +1067,7 @@ export default function WalletTable(): React.ReactElement {
 										header.column.columnDef.header === 'Wallet' ||
 										header.column.columnDef.header === 'Type'
 											? 'font-bold'
-											: header.column.columnDef.header === 'Device Support'
+											: header.column.columnDef.header === 'Risk by device'
 												? 'font-semibold'
 												: 'font-normal'
 									}`}
