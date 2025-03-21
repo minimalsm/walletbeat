@@ -560,13 +560,13 @@ export default function WalletTable(): React.ReactElement {
 
 				return (
 					<div className="flex space-x-0 items-center">
-						<div className="flex flex-col items-center group">
+						<div className="flex flex-col items-center">
 							<button
 								className={`p-2 rounded-md ${
 									!supportsWeb
 										? 'opacity-40 cursor-not-allowed text-[var(--text-tertiary)]'
 										: selectedVariant === DeviceVariant.WEB
-											? 'text-[var(--active)]'
+											? 'text-[var(--pass)]'
 											: 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
 								}`}
 								onClick={() => {
@@ -584,18 +584,18 @@ export default function WalletTable(): React.ReactElement {
 									!supportsWeb
 										? 'bg-[var(--background-tertiary)]'
 										: selectedVariant === DeviceVariant.WEB
-											? 'bg-[var(--active)]'
+											? 'bg-[var(--pass)]'
 											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
 								}`}
 							/>
 						</div>
-						<div className="flex flex-col items-center group">
+						<div className="flex flex-col items-center">
 							<button
 								className={`p-2 rounded-md ${
 									!supportsMobile
 										? 'opacity-40 cursor-not-allowed text-[var(--text-tertiary)]'
 										: selectedVariant === DeviceVariant.MOBILE
-											? 'text-[var(--active)]'
+											? 'text-[var(--pass)]'
 											: 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
 								}`}
 								onClick={() => {
@@ -613,18 +613,18 @@ export default function WalletTable(): React.ReactElement {
 									!supportsMobile
 										? 'bg-[var(--background-tertiary)]'
 										: selectedVariant === DeviceVariant.MOBILE
-											? 'bg-[var(--active)]'
+											? 'bg-[var(--pass)]'
 											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
 								}`}
 							/>
 						</div>
-						<div className="flex flex-col items-center group">
+						<div className="flex flex-col items-center">
 							<button
 								className={`p-2 rounded-md ${
 									!supportsDesktop
 										? 'opacity-40 cursor-not-allowed text-[var(--text-tertiary)]'
 										: selectedVariant === DeviceVariant.DESKTOP
-											? 'text-[var(--active)]'
+											? 'text-[var(--pass)]'
 											: 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
 								}`}
 								onClick={() => {
@@ -642,7 +642,7 @@ export default function WalletTable(): React.ReactElement {
 									!supportsDesktop
 										? 'bg-[var(--background-tertiary)]'
 										: selectedVariant === DeviceVariant.DESKTOP
-											? 'bg-[var(--active)]'
+											? 'bg-[var(--pass)]'
 											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
 								}`}
 							/>
@@ -830,12 +830,12 @@ export default function WalletTable(): React.ReactElement {
 
 				return (
 					<div className="flex space-x-0 items-center justify-center">
-						<div className="flex flex-col items-center group">
+						<div className="flex flex-col items-center">
 							<button
 								className={`p-2 rounded-md ${
 									selectedVariant === DeviceVariant.NONE
 										? 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
-										: 'text-[var(--active)]'
+										: 'text-[var(--pass)]'
 								}`}
 								onClick={() => {
 									handleVariantChange(
@@ -850,14 +850,14 @@ export default function WalletTable(): React.ReactElement {
 									style={{
 										width: '24px',
 										height: '24px',
-										fill: selectedVariant === DeviceVariant.NONE ? 'currentColor' : 'var(--active)',
+										fill: selectedVariant === DeviceVariant.NONE ? 'currentColor' : 'var(--pass)',
 									}}
 								/>
 							</button>
 							<div
 								className={`w-2 h-2 rounded-full mt-1 transition-colors ${
 									selectedVariant !== DeviceVariant.NONE
-										? 'bg-[var(--active)]'
+										? 'bg-[var(--pass)]'
 										: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
 								}`}
 							/>
