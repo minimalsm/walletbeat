@@ -560,14 +560,14 @@ export default function WalletTable(): React.ReactElement {
 
 				return (
 					<div className="flex space-x-0 items-center">
-						<div className="flex flex-col items-center">
+						<div className="flex flex-col items-center group">
 							<button
-								className={`p-2 rounded-md ${
+								className={`p-2 rounded-md transition-colors ${
 									!supportsWeb
 										? 'opacity-40 cursor-not-allowed text-[var(--text-tertiary)]'
 										: selectedVariant === DeviceVariant.WEB
 											? 'text-[var(--active)]'
-											: 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
+											: 'text-[var(--text-secondary)] group-hover:text-[var(--hover)]'
 								}`}
 								onClick={() => {
 									if (supportsWeb) {
@@ -585,18 +585,18 @@ export default function WalletTable(): React.ReactElement {
 										? 'bg-[var(--background-tertiary)]'
 										: selectedVariant === DeviceVariant.WEB
 											? 'bg-[var(--active)]'
-											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
+											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--hover)]'
 								}`}
 							/>
 						</div>
-						<div className="flex flex-col items-center">
+						<div className="flex flex-col items-center group">
 							<button
-								className={`p-2 rounded-md ${
+								className={`p-2 rounded-md transition-colors ${
 									!supportsMobile
 										? 'opacity-40 cursor-not-allowed text-[var(--text-tertiary)]'
 										: selectedVariant === DeviceVariant.MOBILE
 											? 'text-[var(--active)]'
-											: 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
+											: 'text-[var(--text-secondary)] group-hover:text-[var(--hover)]'
 								}`}
 								onClick={() => {
 									if (supportsMobile) {
@@ -614,18 +614,18 @@ export default function WalletTable(): React.ReactElement {
 										? 'bg-[var(--background-tertiary)]'
 										: selectedVariant === DeviceVariant.MOBILE
 											? 'bg-[var(--active)]'
-											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
+											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--hover)]'
 								}`}
 							/>
 						</div>
-						<div className="flex flex-col items-center">
+						<div className="flex flex-col items-center group">
 							<button
-								className={`p-2 rounded-md ${
+								className={`p-2 rounded-md transition-colors ${
 									!supportsDesktop
 										? 'opacity-40 cursor-not-allowed text-[var(--text-tertiary)]'
 										: selectedVariant === DeviceVariant.DESKTOP
 											? 'text-[var(--active)]'
-											: 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
+											: 'text-[var(--text-secondary)] group-hover:text-[var(--hover)]'
 								}`}
 								onClick={() => {
 									if (supportsDesktop) {
@@ -643,7 +643,7 @@ export default function WalletTable(): React.ReactElement {
 										? 'bg-[var(--background-tertiary)]'
 										: selectedVariant === DeviceVariant.DESKTOP
 											? 'bg-[var(--active)]'
-											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
+											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--hover)]'
 								}`}
 							/>
 						</div>
@@ -830,11 +830,11 @@ export default function WalletTable(): React.ReactElement {
 
 				return (
 					<div className="flex space-x-0 items-center justify-center">
-						<div className="flex flex-col items-center">
+						<div className="flex flex-col items-center group">
 							<button
-								className={`p-2 rounded-md ${
+								className={`p-2 rounded-md transition-colors ${
 									selectedVariant === DeviceVariant.NONE
-										? 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
+										? 'text-[var(--text-secondary)] group-hover:text-[var(--hover)]'
 										: 'text-[var(--active)]'
 								}`}
 								onClick={() => {
@@ -858,7 +858,7 @@ export default function WalletTable(): React.ReactElement {
 								className={`w-2 h-2 rounded-full mt-1 transition-colors ${
 									selectedVariant !== DeviceVariant.NONE
 										? 'bg-[var(--active)]'
-										: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
+										: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--hover)]'
 								}`}
 							/>
 						</div>

@@ -27,8 +27,8 @@
 		--pass: #2ecc71;
 		--fail: #e74c3c;
 		--partial: #f1c40f;
-		--active: #72eba4;
-		--hover: #292929;
+		--active: #2ecc71;
+		--hover: #16a652;
 		/* Hashtag styling for light mode */
 		--hashtag-text: #1976d2; /* Blue that's readable on light background */
 		--hashtag-bg: rgba(25, 118, 210, 0.08);
@@ -62,7 +62,7 @@ html.dark {
 	--fail: #e74c3c;
 	--partial: #f1c40f;
 	--active: #18954c;
-	--hover: #dedede;
+	--hover: #0bc558;
 	/* Hashtag styling for dark mode */
 	--hashtag-text: #90caf9; /* Lighter blue that's readable on dark background */
 	--hashtag-bg: rgba(144, 202, 249, 0.08);
