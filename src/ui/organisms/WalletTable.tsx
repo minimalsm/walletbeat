@@ -300,20 +300,20 @@ function PizzaSliceChart({
 	const sliceColors = attributeRatings.map(attr => {
 		switch (attr.rating) {
 			case Rating.PASS:
-				return '#2ecc71' // Green
+				return 'var(--rating-pass)'
 			case Rating.PARTIAL:
-				return '#f1c40f' // Yellow
+				return 'var(--rating-partial)'
 			case Rating.FAIL:
-				return '#e74c3c' // Red
+				return 'var(--rating-fail)'
 			default:
-				return '#bdc3c7' // Gray
+				return 'var(--rating-neutral)'
 		}
 	})
 
 	// If we don't have any ratings, use default colors
 	if (sliceColors.length === 0) {
 		for (let i = 0; i < 4; i++) {
-			sliceColors.push('#bdc3c7') // Gray
+			sliceColors.push('var(--rating-neutral)')
 		}
 	}
 
@@ -1026,84 +1026,103 @@ export default function WalletTable(): React.ReactElement {
 
 	return (
 		<div className="overflow-x-auto">
-			{/* Tabs */}
-			<div className="flex border-b mb-4">
-				<button
-					className={`px-4 py-2 font-medium text-sm focus:outline-none ${
-						activeTab === WalletTableTab.SOFTWARE
-							? 'border-b-2 border-blue-500 text-blue-600'
-							: 'text-gray-500 hover:text-gray-700'
-					}`}
-					onClick={() => {
-						handleTabChange(WalletTableTab.SOFTWARE)
-					}}
-				>
-					Software Wallets
-				</button>
-				<button
-					className={`px-4 py-2 font-medium text-sm focus:outline-none ${
-						activeTab === WalletTableTab.HARDWARE
-							? 'border-b-2 border-blue-500 text-blue-600'
-							: 'text-gray-500 hover:text-gray-700'
-					}`}
-					onClick={() => {
-						handleTabChange(WalletTableTab.HARDWARE)
-					}}
-				>
-					Hardware Wallets
-				</button>
+			{/* Tabs - now fixed */}
+			<div className="sticky top-0 bg-white dark:bg-[#141414] z-10">
+				<div className="flex">
+					<button
+						className={`px-4 py-3 font-medium text-sm rounded-tr-lg rounded-tl-lg transition-transform ${
+							activeTab === WalletTableTab.SOFTWARE
+								? 'bg-white dark:bg-[#292C34] shadow-sm text-gray-800 dark:text-gray-100 border border-b-0 border-[#DE69BB]'
+								: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 bg-[#EAEAEA] dark:bg-[#17191f]'
+						}`}
+						onClick={() => {
+							handleTabChange(WalletTableTab.SOFTWARE)
+						}}
+					>
+						Software wallets
+						<span
+							className={`ml-2 px-2 py-0.5 text-xs text-white font-medium rounded-full ${
+								activeTab === WalletTableTab.SOFTWARE ? 'bg-purple-500' : 'bg-[#3B0E45]'
+							}`}
+						>
+							{softwareWalletData.length}
+						</span>
+					</button>
+					<button
+						className={`px-4 py-3 font-medium text-sm rounded-tr-lg rounded-tl-lg transition-transform ${
+							activeTab === WalletTableTab.HARDWARE
+								? 'bg-white dark:bg-[#292C34] shadow-sm text-gray-800 dark:text-gray-100 border border-b-0 border-[#DE69BB]'
+								: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 bg-[#EAEAEA] dark:bg-[#17191f]'
+						}`}
+						onClick={() => {
+							handleTabChange(WalletTableTab.HARDWARE)
+						}}
+					>
+						Hardware wallets
+						<span
+							className={`ml-2 px-2 py-0.5 text-xs text-white font-medium rounded-full ${
+								activeTab === WalletTableTab.HARDWARE ? 'bg-purple-500' : 'bg-[#3B0E45]'
+							}`}
+						>
+							{hardwareWalletData.length}
+						</span>
+					</button>
+				</div>
 			</div>
 
 			{/* Table */}
-			<table className="min-w-full divide-y border-[var(--border)]">
-				<thead>
-					{table.getHeaderGroups().map(headerGroup => (
-						<tr key={headerGroup.id}>
-							{headerGroup.headers.map(header => (
-								<th
-									key={header.id}
-									className={`px-4 py-2 text-left text-[14px] text-[var(--text-secondary)] bg-[var(--background-tertiary)] ${
-										header.column.columnDef.header === 'Wallet' ||
-										header.column.columnDef.header === 'Type'
-											? 'font-bold'
-											: header.column.columnDef.header === 'Risk by device'
-												? 'font-semibold'
-												: 'font-normal'
-									}`}
-								>
-									{flexRender(header.column.columnDef.header, header.getContext())}
-								</th>
-							))}
-						</tr>
-					))}
-				</thead>
-				<tbody className="divide-y border-[var(--border)]">
-					{table
-						.getRowModel()
-						.rows.map(row => {
-							const parentWallet = row.original.wallet
-							const isSupported =
-								!parentWallet ||
-								(activeTab === WalletTableTab.HARDWARE &&
-									(selectedVariant === DeviceVariant.NONE ||
-										selectedVariant === DeviceVariant.HARDWARE)) ||
-								(activeTab === WalletTableTab.SOFTWARE &&
-									(selectedVariant === DeviceVariant.NONE ||
-										walletSupportsVariant(parentWallet, selectedVariant)))
+			<div className="overflow-x-auto">
+				<table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+					<thead>
+						{table.getHeaderGroups().map(headerGroup => (
+							<tr key={headerGroup.id}>
+								{headerGroup.headers.map(header => (
+									<th
+										key={header.id}
+										className={`px-4 py-2 text-center text-[14px] text-[#616161] bg-gray-100 ${
+											header.column.columnDef.header === 'Wallet' ||
+											header.column.columnDef.header === 'Type' ||
+											header.column.columnDef.header === 'Manufacture Type'
+												? 'font-bold !text-left'
+												: header.column.columnDef.header === 'Risk by device'
+													? 'font-semibold'
+													: 'font-normal'
+										}`}
+									>
+										{flexRender(header.column.columnDef.header, header.getContext())}
+									</th>
+								))}
+							</tr>
+						))}
+					</thead>
+					<tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+						{table
+							.getRowModel()
+							.rows.map(row => {
+								const parentWallet = row.original.wallet
+								const isSupported =
+									!parentWallet ||
+									(activeTab === WalletTableTab.HARDWARE &&
+										(selectedVariant === DeviceVariant.NONE ||
+											selectedVariant === DeviceVariant.HARDWARE)) ||
+									(activeTab === WalletTableTab.SOFTWARE &&
+										(selectedVariant === DeviceVariant.NONE ||
+											walletSupportsVariant(parentWallet, selectedVariant)))
 
-							return (
-								<tr key={row.id} className={`${!isSupported ? 'opacity-50' : ''}`}>
-									{row.getVisibleCells().map(cell => (
-										<td key={cell.id} className="px-4 py-2">
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
-										</td>
-									))}
-								</tr>
-							)
-						})
-						.filter(Boolean)}
-				</tbody>
-			</table>
+								return (
+									<tr key={row.id} className={`${!isSupported ? 'opacity-50' : ''}`}>
+										{row.getVisibleCells().map(cell => (
+											<td key={cell.id} className="px-4 py-2">
+												{flexRender(cell.column.columnDef.cell, cell.getContext())}
+											</td>
+										))}
+									</tr>
+								)
+							})
+							.filter(Boolean)}
+					</tbody>
+				</table>
+			</div>
 		</div>
 	)
 }
