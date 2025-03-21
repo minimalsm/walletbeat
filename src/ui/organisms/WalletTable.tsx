@@ -566,7 +566,7 @@ export default function WalletTable(): React.ReactElement {
 									!supportsWeb
 										? 'opacity-40 cursor-not-allowed text-[var(--text-tertiary)]'
 										: selectedVariant === DeviceVariant.WEB
-											? 'text-[var(--pass)]'
+											? 'text-[var(--active)]'
 											: 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
 								}`}
 								onClick={() => {
@@ -584,7 +584,7 @@ export default function WalletTable(): React.ReactElement {
 									!supportsWeb
 										? 'bg-[var(--background-tertiary)]'
 										: selectedVariant === DeviceVariant.WEB
-											? 'bg-[var(--pass)]'
+											? 'bg-[var(--active)]'
 											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
 								}`}
 							/>
@@ -595,7 +595,7 @@ export default function WalletTable(): React.ReactElement {
 									!supportsMobile
 										? 'opacity-40 cursor-not-allowed text-[var(--text-tertiary)]'
 										: selectedVariant === DeviceVariant.MOBILE
-											? 'text-[var(--pass)]'
+											? 'text-[var(--active)]'
 											: 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
 								}`}
 								onClick={() => {
@@ -613,7 +613,7 @@ export default function WalletTable(): React.ReactElement {
 									!supportsMobile
 										? 'bg-[var(--background-tertiary)]'
 										: selectedVariant === DeviceVariant.MOBILE
-											? 'bg-[var(--pass)]'
+											? 'bg-[var(--active)]'
 											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
 								}`}
 							/>
@@ -624,7 +624,7 @@ export default function WalletTable(): React.ReactElement {
 									!supportsDesktop
 										? 'opacity-40 cursor-not-allowed text-[var(--text-tertiary)]'
 										: selectedVariant === DeviceVariant.DESKTOP
-											? 'text-[var(--pass)]'
+											? 'text-[var(--active)]'
 											: 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
 								}`}
 								onClick={() => {
@@ -642,7 +642,7 @@ export default function WalletTable(): React.ReactElement {
 									!supportsDesktop
 										? 'bg-[var(--background-tertiary)]'
 										: selectedVariant === DeviceVariant.DESKTOP
-											? 'bg-[var(--pass)]'
+											? 'bg-[var(--active)]'
 											: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
 								}`}
 							/>
@@ -835,7 +835,7 @@ export default function WalletTable(): React.ReactElement {
 								className={`p-2 rounded-md ${
 									selectedVariant === DeviceVariant.NONE
 										? 'text-[var(--text-secondary)] group-hover:text-[var(--active)]'
-										: 'text-[var(--pass)]'
+										: 'text-[var(--active)]'
 								}`}
 								onClick={() => {
 									handleVariantChange(
@@ -850,14 +850,14 @@ export default function WalletTable(): React.ReactElement {
 									style={{
 										width: '24px',
 										height: '24px',
-										fill: selectedVariant === DeviceVariant.NONE ? 'currentColor' : 'var(--pass)',
+										fill: selectedVariant === DeviceVariant.NONE ? 'currentColor' : 'var(--active)',
 									}}
 								/>
 							</button>
 							<div
 								className={`w-2 h-2 rounded-full mt-1 transition-colors ${
 									selectedVariant !== DeviceVariant.NONE
-										? 'bg-[var(--pass)]'
+										? 'bg-[var(--active)]'
 										: 'bg-[var(--background-tertiary)] group-hover:bg-[var(--active)]'
 								}`}
 							/>
